@@ -1,120 +1,124 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
 /**
  * CodeIgniter
  *
- * An open source application development framework for PHP 5.1.6 or newer
+ * An open source application development framework for PHP
  *
- * @package		CodeIgniter
- * @author		EllisLab Dev Team
- * @copyright		Copyright (c) 2008 - 2014, EllisLab, Inc.
- * @copyright		Copyright (c) 2014 - 2015, British Columbia Institute of Technology (http://bcit.ca/)
- * @license		http://codeigniter.com/user_guide/license.html
- * @link		http://codeigniter.com
- * @since		Version 1.0
+ * This content is released under the MIT License (MIT)
+ *
+ * Copyright (c) 2014-2019 British Columbia Institute of Technology
+ * Copyright (c) 2019-2020 CodeIgniter Foundation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package    CodeIgniter
+ * @author     CodeIgniter Dev Team
+ * @copyright  2019-2020 CodeIgniter Foundation
+ * @license    https://opensource.org/licenses/MIT	MIT License
+ * @link       https://codeigniter.com
+ * @since      Version 4.0.0
  * @filesource
  */
-
-// ------------------------------------------------------------------------
 
 /**
  * CodeIgniter Array Helpers
  *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		http://codeigniter.com/user_guide/helpers/array_helper.html
+ * @package CodeIgniter
  */
 
-// ------------------------------------------------------------------------
-
-/**
- * Element
- *
- * Lets you determine whether an array index is set and whether it has a value.
- * If the element is empty it returns FALSE (or whatever you specify as the default value.)
- *
- * @access	public
- * @param	string
- * @param	array
- * @param	mixed
- * @return	mixed	depends on what the array contains
- */
-if ( ! function_exists('element'))
+if (! function_exists('dot_array_search'))
 {
-	function element($item, $array, $default = FALSE)
+	/**
+	 * Searches an array through dot syntax. Supports
+	 * wildcard searches, like foo.*.bar
+	 *
+	 * @param string $index
+	 * @param array  $array
+	 *
+	 * @return mixed|null
+	 */
+	function dot_array_search(string $index, array $array)
 	{
-		if ( ! isset($array[$item]) OR $array[$item] == "")
-		{
-			return $default;
-		}
+		$segments = explode('.', rtrim(rtrim($index, '* '), '.'));
 
-		return $array[$item];
+		return _array_search_dot($segments, $array);
 	}
 }
 
-// ------------------------------------------------------------------------
-
-/**
- * Random Element - Takes an array as input and returns a random element
- *
- * @access	public
- * @param	array
- * @return	mixed	depends on what the array contains
- */
-if ( ! function_exists('random_element'))
+if (! function_exists('_array_search_dot'))
 {
-	function random_element($array)
+	/**
+	 * Used by dot_array_search to recursively search the
+	 * array with wildcards.
+	 *
+	 * @param array $indexes
+	 * @param array $array
+	 *
+	 * @return mixed|null
+	 */
+	function _array_search_dot(array $indexes, array $array)
 	{
-		if ( ! is_array($array))
+		// Grab the current index
+		$currentIndex = $indexes
+			? array_shift($indexes)
+			: null;
+
+		if ((empty($currentIndex)  && intval($currentIndex) !== 0) || (! isset($array[$currentIndex]) && $currentIndex !== '*'))
 		{
-			return $array;
+			return null;
 		}
 
-		return $array[array_rand($array)];
-	}
-}
-
-// --------------------------------------------------------------------
-
-/**
- * Elements
- *
- * Returns only the array items specified.  Will return a default value if
- * it is not set.
- *
- * @access	public
- * @param	array
- * @param	array
- * @param	mixed
- * @return	mixed	depends on what the array contains
- */
-if ( ! function_exists('elements'))
-{
-	function elements($items, $array, $default = FALSE)
-	{
-		$return = array();
-		
-		if ( ! is_array($items))
+		// Handle Wildcard (*)
+		if ($currentIndex === '*')
 		{
-			$items = array($items);
-		}
-		
-		foreach ($items as $item)
-		{
-			if (isset($array[$item]))
+			// If $array has more than 1 item, we have to loop over each.
+			if (is_array($array))
 			{
-				$return[$item] = $array[$item];
-			}
-			else
-			{
-				$return[$item] = $default;
+				foreach ($array as $value)
+				{
+					$answer = _array_search_dot($indexes, $value);
+
+					if ($answer !== null)
+					{
+						return $answer;
+					}
+				}
+
+				// Still here after searching all child nodes?
+				return null;
 			}
 		}
 
-		return $return;
+		// If this is the last index, make sure to return it now,
+		// and not try to recurse through things.
+		if (empty($indexes))
+		{
+			return $array[$currentIndex];
+		}
+
+		// Do we need to recursively search this value?
+		if (is_array($array[$currentIndex]) && $array[$currentIndex])
+		{
+			return _array_search_dot($indexes, $array[$currentIndex]);
+		}
+
+		// Otherwise we've found our match!
+		return $array[$currentIndex];
 	}
 }
-
-/* End of file array_helper.php */
-/* Location: ./system/helpers/array_helper.php */

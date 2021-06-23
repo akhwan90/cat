@@ -7,27 +7,19 @@
 					<i class="nav-icon icon-speedometer"></i> Dashboard
 				</a>
 			</li>
-			<!-- <li class="nav-item open">
-				<a class="nav-link" href="<?=base_url('admin/aspek');?>">
-					<i class="nav-icon fa fa-th-list"></i> Aspek
+			<li class="nav-item open">
+				<a class="nav-link" href="<?=base_url('admin/siswa');?>">
+					<i class="nav-icon fa fa-user"></i> Siswa
 				</a>
 			</li>
 			<li class="nav-item open">
-				<a class="nav-link" href="<?=base_url('admin/kompetensi');?>">
-					<i class="nav-icon fa fa-th-list"></i> Kompetensi
-				</a>
-			</li> -->
-			<li class="nav-item open">
-				<a class="nav-link" href="<?=base_url('admin/peserta');?>">
-					<i class="nav-icon fa fa-users"></i> Peserta
+				<a class="nav-link" href="<?=base_url('admin/guru');?>">
+					<i class="nav-icon fa fa-briefcase"></i> Guru
 				</a>
 			</li>
-			<?php 
-			if (session('level') == 1) {
-			?>
 			<li class="nav-item open">
-				<a class="nav-link" href="<?=base_url('admin/soal');?>">
-					<i class="nav-icon fa fa-edit"></i> Soal
+				<a class="nav-link" href="<?=base_url('admin/mapel');?>">
+					<i class="nav-icon fa fa-book"></i> Mata Pelajaran
 				</a>
 			</li>
 			<li class="nav-item open">
@@ -50,7 +42,6 @@
 					<i class="nav-icon fa fa-edit"></i> Jenis Ujian
 				</a>
 			</li>
-			<?php } ?>
 		</ul>
 	</nav>
 	<button class="sidebar-minimizer brand-minimizer" type="button"></button>

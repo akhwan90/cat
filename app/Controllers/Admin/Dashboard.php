@@ -6,56 +6,13 @@ use App\Controllers\BaseController;
 class Dashboard extends BaseController {
 	
 	public function index() {
+
 		$d['p'] = 'admin/dashboard';
 		$d['title'] = 'Dashboard';
 
-		$jml_peserta = $this->db->table('m_peserta');
-		$jml_peserta->select('id');
-		$d['jml_peserta'] = $jml_peserta->countAll();
-
-		// $jml_peserta_rekomendasi = $this->db->table('hasil_rekomendasi');
-		// $jml_peserta_rekomendasi->where('notes', 'Ready');
-		// $jml_peserta_rekomendasi->orWhere('notes', 'Direkomendasikan');
-		// $jml_peserta_rekomendasi->select('id');
-		// $d['jml_peserta_rekomendasi'] = $jml_peserta_rekomendasi->countAll();
-
-		// $jml_peserta_rekomendasi_tdk = $this->db->table('hasil_rekomendasi');
-		// $jml_peserta_rekomendasi_tdk->where('notes', 'Not Ready');
-		// $jml_peserta_rekomendasi_tdk->orWhere('notes', 'Tidak Direkomendasikan');
-		// $jml_peserta_rekomendasi_tdk->select('id');
-		// $d['jml_peserta_rekomendasi_tdk'] = $jml_peserta_rekomendasi_tdk->countAll();
-
-		$d['jml_peserta_seleksi_non_staff'] = count($this->db->table('m_peserta b')
-		->where('b.jenis_tes', 1)
-		->where('b.jenis_staff', 1)
-		->select('b.id')
-		->get()->getResultArray());
-		
-		$d['jml_peserta_seleksi_staff'] = count($this->db->table('m_peserta b')
-		->where('b.jenis_tes', 1)
-		->where('b.jenis_staff', 2)
-		->select('b.id')
-		->get()->getResultArray());
-		
-		$d['jml_peserta_assesment'] = count($this->db->table('m_peserta b')
-		->where('b.jenis_tes', 2)
-		->where('b.jenis_staff', 0)
-		->select('b.id')
-		->get()->getResultArray());
-
-		$d['hasil_ujian_per_jenis'] = $this->db->query("
-				SELECT 
-				SUM(case when (b.jenis_tes = 1 AND b.jenis_staff = 1 AND a.notes = 'Direkomendasikan') then 1 else 0 end) non_staff_rekomendasi,
-				SUM(case when (b.jenis_tes = 1 AND b.jenis_staff = 1 AND a.notes = 'Tidak Direkomendasikan') then 1 else 0 end) non_staff_tidak_rekomendasi,
-				SUM(case when (b.jenis_tes = 1 AND b.jenis_staff = 2 AND a.notes = 'Direkomendasikan') then 1 else 0 end) staff_rekomendasi,
-				SUM(case when (b.jenis_tes = 1 AND b.jenis_staff = 2 AND a.notes = 'Tidak Direkomendasikan') then 1 else 0 end) staff_tidak_rekomendasi,
-				SUM(case when (b.jenis_tes = 2 AND b.jenis_staff = 0 AND a.notes = 'Ready') then 1 else 0 end) assesment_ready,
-				SUM(case when (b.jenis_tes = 2 AND b.jenis_staff = 0 AND a.notes = 'Need Development') then 1 else 0 end) assesment_need_development,
-				SUM(case when (b.jenis_tes = 2 AND b.jenis_staff = 0 AND a.notes = 'Not Ready') then 1 else 0 end) assesment_not_ready
-				FROM hasil_rekomendasi a
-				INNER JOIN m_peserta b ON a.id_peserta = b.id
-		")->getRowArray();
-
+		$d['jml_peserta'] = $this->db->table('m_siswa')->countAllResults();
+		$d['jml_guru'] = $this->db->table('m_guru')->countAllResults();
+ 
 		return view('template_admin', $d);
 	}
 

@@ -47,33 +47,40 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
     $routes->get('ubah_password', 'Admin\Dashboard::ubah_password');
     $routes->post('ubah_password', 'Admin\Dashboard::ubah_password_ok');
 
-    $routes->group('aspek', function($routes) {	
-	    $routes->get('', 'Admin\Aspek::index');
-	    $routes->post('datatabel', 'Admin\Aspek::datatabel');
-	    $routes->post('detil', 'Admin\Aspek::detil');
-	    $routes->post('simpan', 'Admin\Aspek::simpan');
-	    $routes->post('hapus', 'Admin\Aspek::hapus');
+    $routes->group('siswa', function($routes) {	
+	    $routes->get('', 'Admin\Siswa::index');
+	    $routes->post('datatabel', 'Admin\Siswa::datatabel');
+	    $routes->post('detil', 'Admin\Siswa::detil');
+	    $routes->post('simpan', 'Admin\Siswa::simpan');
+	    $routes->post('hapus', 'Admin\Siswa::hapus');
+	    $routes->get('aktifkan_user', 'Admin\Siswa::aktifkan_user');
+	    $routes->get('aktifkan_user_satu/(:num)', 'Admin\Siswa::aktifkan_user_satu/$1');
+	    $routes->post('reset_password', 'Admin\Siswa::reset_password');
+	    $routes->get('form_import', 'Admin\Siswa::form_import');
+	    $routes->post('import_ok', 'Admin\Siswa::import_ok');
     });
 
-    $routes->group('kompetensi', function($routes) {	
-	    $routes->get('', 'Admin\Kompetensi::index');
-	    $routes->post('datatabel', 'Admin\Kompetensi::datatabel');
-	    $routes->post('detil', 'Admin\Kompetensi::detil');
-	    $routes->post('simpan', 'Admin\Kompetensi::simpan');
-	    $routes->post('hapus', 'Admin\Kompetensi::hapus');
+    $routes->group('guru', function($routes) {	
+	    $routes->get('', 'Admin\Guru::index');
+	    $routes->post('datatabel', 'Admin\Guru::datatabel');
+	    $routes->post('detil', 'Admin\Guru::detil');
+	    $routes->post('simpan', 'Admin\Guru::simpan');
+	    $routes->post('hapus', 'Admin\Guru::hapus');
+	    $routes->get('aktifkan_user', 'Admin\Guru::aktifkan_user');
+	    $routes->get('aktifkan_user_satu/(:num)', 'Admin\Guru::aktifkan_user_satu/$1');
+	    $routes->post('reset_password', 'Admin\Guru::reset_password');
+	    $routes->get('form_import', 'Admin\Guru::form_import');
+	    $routes->post('import_ok', 'Admin\Guru::import_ok');
     });
 
-    $routes->group('peserta', function($routes) {	
-	    $routes->get('', 'Admin\Peserta::index');
-	    $routes->post('datatabel', 'Admin\Peserta::datatabel');
-	    $routes->post('detil', 'Admin\Peserta::detil');
-	    $routes->post('simpan', 'Admin\Peserta::simpan');
-	    $routes->post('hapus', 'Admin\Peserta::hapus');
-	    $routes->get('aktifkan_user', 'Admin\Peserta::aktifkan_user');
-	    $routes->post('reset_password', 'Admin\Peserta::reset_password');
-	    $routes->get('form_import', 'Admin\Peserta::form_import');
-	    $routes->post('import_ok', 'Admin\Peserta::import_ok');
-	    $routes->post('kirim_email', 'Admin\Peserta::kirim_email');
+    $routes->group('mapel', function($routes) {	
+	    $routes->get('', 'Admin\Mapel::index');
+	    $routes->post('datatabel', 'Admin\Mapel::datatabel');
+	    $routes->post('detil', 'Admin\Mapel::detil');
+	    $routes->post('simpan', 'Admin\Mapel::simpan');
+	    $routes->post('hapus', 'Admin\Mapel::hapus');
+	    $routes->get('form_import', 'Admin\Mapel::form_import');
+	    $routes->post('import_ok', 'Admin\Mapel::import_ok');
     });
 
     $routes->group('jenis_ujian', function($routes) {	

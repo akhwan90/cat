@@ -18,14 +18,14 @@
 </div>
 
 <!-- CoreUI and necessary plugins-->
-<script src="<?=base_url();?>/public/aset/vendors/popper.js/js/popper.min.js"></script>
-<script src="<?=base_url();?>/public/aset/vendors/bootstrap/js/bootstrap.min.js"></script>
-<script src="<?=base_url();?>/public/aset/vendors/pace-progress/js/pace.min.js"></script>
-<script src="<?=base_url();?>/public/aset/vendors/perfect-scrollbar/js/perfect-scrollbar.min.js"></script>
-<script src="<?=base_url();?>/public/aset/vendors/@coreui/coreui/js/coreui.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/popper.js/js/popper.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/bootstrap/js/bootstrap.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/pace-progress/js/pace.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/perfect-scrollbar/js/perfect-scrollbar.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/@coreui/coreui/js/coreui.min.js"></script>
 <!-- Plugins and scripts required by this view-->
-<script src="<?=base_url();?>/public/aset/vendors/chart.js/js/Chart.min.js"></script>
-<script src="<?=base_url();?>/public/aset/vendors/@coreui/coreui-plugin-chartjs-custom-tooltips/js/custom-tooltips.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/chart.js/js/Chart.min.js"></script>
+<script src="<?=base_url();?>/aset/vendors/@coreui/coreui-plugin-chartjs-custom-tooltips/js/custom-tooltips.min.js"></script>
 
 <!-- Alert -->
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.12.0/build/alertify.min.js"></script>
@@ -39,22 +39,22 @@
 	base_url = "<?=base_url();?>";
 </script>
 
-<script src="<?=base_url();?>/public/aset/js/jquery.countdown.min.js"></script>
-<script src="<?=base_url();?>/public/aset/js/page/base.js"></script>
+<script src="<?=base_url();?>/aset/js/jquery.countdown.min.js"></script>
+<script src="<?=base_url();?>/aset/js/page/base.js"></script>
 
 <?php
 if (isset($js)) {
 	if (!is_array($js)) {
 		if (!empty($js)) {
-			if (is_file('./public/aset/js/page/' . $js . ".js")) {
-				echo '<script src="' . base_url('public/aset/js/page/' . $js . ".js?v=" . time()) . '"></script>';
+			if (is_file('./aset/js/page/' . $js . ".js")) {
+				echo '<script src="' . base_url('aset/js/page/' . $js . ".js?v=" . time()) . '"></script>';
 			}
 		}
 	} else {
 		if (!empty($js)) {
 			foreach ($js as $javascript) {
-				if (is_file('./public/aset/js/page/' . $javascript . ".js")) {
-					echo '<script src="' . base_url('public/aset/js/page/' . $javascript . ".js?v=" . time()) . '"></script>';
+				if (is_file('./aset/js/page/' . $javascript . ".js")) {
+					echo '<script src="' . base_url('aset/js/page/' . $javascript . ".js?v=" . time()) . '"></script>';
 				}
 			}
 		}

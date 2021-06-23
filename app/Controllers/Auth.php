@@ -26,7 +26,7 @@ class Auth extends BaseController {
 	public function login() {
 		$var_post = $this->request->getPost();
 
-		$builder = $this->db->table('admins');
+		$builder = $this->db->table('m_admin');
 		$builder->where('username', $var_post['usernames']);
 		$data = $builder->get()->getRowArray();
 
@@ -54,7 +54,9 @@ class Auth extends BaseController {
         if($cek_captcha) {
 
 			if (!empty($data)) {
-				if (password_verify($var_post['passwords'], $data['password'])) {
+				$password = md5($var_post['passwords']);
+
+				if ($password === $data['password']) {
 
 					unset($data['password']);
 					$newdata = $data;

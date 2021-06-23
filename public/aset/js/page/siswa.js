@@ -1,4 +1,4 @@
-const uri_modul = base_url + '/admin/peserta/';
+const uri_modul = base_url + '/admin/siswa/';
 
 function dt() {
     pagination("datatabel", uri_modul + "datatabel", [], 50);
@@ -73,15 +73,9 @@ function edit(id) {
 	if (id < 1) {
 		$("#_id").val(0);
 		$("#_mode").val('add');
-		$("#nomor").val('');
-		$("#email").val('');
-		$("#posisi_saat_ini").val('');
 		$("#nama").val('');
-		$("#level_test").val('');
-		$("#usia").val('');
-		$("#jenis_kelamin").val('');
-		$("#pendidikan").val('');
-		$("#foto_peserta").val('');
+		$("#nim").val('');
+		$("#jurusan").val('');
 	} else {
 		$.ajax({
 		    type: "POST",
@@ -97,17 +91,9 @@ function edit(id) {
 		        } else {
 					$("#_id").val(r.results.id);
 					$("#_mode").val('edit');
-					$("#nomor").val(r.results.nomor);
 					$("#nama").val(r.results.nama);
-					$("#email").val(r.results.email);
-					$("#posisi_saat_ini").val(r.results.posisi_saat_ini);
-					$("#level_test").val(r.results.level_test);
-					$("#usia").val(r.results.usia);
-					$("#jenis_kelamin").val(r.results.jenis_kelamin);
-					$("#pendidikan").val(r.results.pendidikan);
-					$("#tmp_lahir").val(r.results.tmp_lahir);
-					$("#tgl_lahir").val(r.results.tgl_lahir);
-					$("#foto_peserta").val('');
+					$("#nim").val(r.results.nim);
+					$("#jurusan").val(r.results.jurusan);
 		        }
 		    },
 		    error: function(xhr) {
@@ -186,6 +172,28 @@ function hapus(id) {
 	return false;
 }
 
+function aktifkan_user_satu(nim) {
+	if (confirm('Akan mengaktifkan user ini..?')) {
+		$.ajax({
+		    type: "GET",
+		    url: uri_modul + "aktifkan_user_satu/"+nim,
+		    success: function(r, textStatus, jqXHR) {	
+		        if (r.success == false) {
+		            alert(r.message);
+		        } else {
+		            alert(r.message);
+					dt();
+		        }
+		    },
+		    error: function(xhr) {
+				console.log(xhr)
+		    }
+		});
+	}
+
+	return false;
+}
+
 function aktifkan_user() {
 	if (confirm('Akan mengaktifkan user yang belum aktif..?')) {
 		$.ajax({
@@ -220,22 +228,6 @@ function reset(id) {
 
 		return false;
 
-
-		/*$.ajax({
-		    type: "GET",
-		    url: uri_modul + "reset_password/"+id,
-		    success: function(r, textStatus, jqXHR) {	
-		        if (r.success == false) {
-		            alert(r.message);
-		        } else {
-		            alert(r.message);
-					dt();
-		        }
-		    },
-		    error: function(xhr) {
-				console.log(xhr)
-		    }
-		});*/
 	}
 
 	return false;
@@ -251,7 +243,7 @@ function reset_ok() {
 
     $.ajax({
         type: "POST",
-        url: base_url + "/admin/peserta/reset_password",
+        url: base_url + "/admin/siswa/reset_password",
         data: data,
         processData: false,
         contentType: false,

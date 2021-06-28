@@ -21,6 +21,18 @@
 								<div class="card-body text-right"><h1><?=$jml_guru;?></h1></div>
 							</div>
 						</div>
+						<div class="col-lg-3">
+							<div class="card text-white bg-warning">
+								<div class="card-header">Level</div>
+								<div class="card-body text-right"><h1><?=session('level');?></h1></div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="card text-white bg-warning">
+								<div class="card-header">User ID</div>
+								<div class="card-body text-right"><h1><?=session('id');?></h1></div>
+							</div>
+						</div>
 					</div>
 
 				</div>

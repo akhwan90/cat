@@ -6,9 +6,10 @@
     <meta name="author" content="Łukasz Holeczek">
     <meta name="keyword" content="Bootstrap,Admin,Template,Open,Source,jQuery,CSS,HTML,RWD,Dashboard">
     <title><?=$title;?></title>
+    <?= csrf_meta() ?>
     <!-- Icons-->
     <link href="<?=base_url();?>/aset/vendors/@coreui/icons/css/coreui-icons.min.css" rel="stylesheet">
-    <link href="<?=base_url();?>/aset/vendors/flag-icon-css/css/flag-icon.min.css" rel="stylesheet">
+    <!-- <link href="<?=base_url();?>/aset/vendors/flag-icon-css/css/flag-icon.min.css" rel="stylesheet"> -->
     <link href="<?=base_url();?>/aset/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="<?=base_url();?>/aset/vendors/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
     <!-- Main st<?=base_url();?>/aset/yles for this application-->
@@ -65,6 +66,14 @@
     }
 
     </style>
+
+    <script type="text/javascript">
+	$.ajaxSetup({
+	    headers: {
+	        'X-CSRF-TOKEN': $('meta[name="X-CSRF-TOKEN"]').attr('content')
+	    }
+	});
+	</script>
 
     <!-- <script type='text/javascript' src='//platform-api.sharethis.com/js/sharethis.js#property=5b3ed3ef07712f00113786c2&product=inline-share-buttons' async='async'></script> -->
 </head>

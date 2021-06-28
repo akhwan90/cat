@@ -1,6 +1,45 @@
-const jenis = document.getElementById("jenis").value;
-const bagian = document.getElementById("bagian").value;
+CKEDITOR.config.height = 70;
+CKEDITOR.config.width = 'auto';
+
+CKEDITOR.replace('soal');
+CKEDITOR.replace('opsi_a');
+CKEDITOR.replace('opsi_b');
+CKEDITOR.replace('opsi_c');
+CKEDITOR.replace('opsi_d');
+CKEDITOR.replace('opsi_e');
+
+$('#file').on('change',function(){
+	var fileName = $(this).val();
+	$(this).next('.custom-file-label').html(fileName);
+});
+$('#media_a').on('change',function(){
+	var fileName = $(this).val();
+	$(this).next('.custom-file-label').html(fileName);
+});
+$('#media_b').on('change',function(){
+	var fileName = $(this).val();
+	$(this).next('.custom-file-label').html(fileName);
+});
+$('#media_c').on('change',function(){
+	var fileName = $(this).val();
+	$(this).next('.custom-file-label').html(fileName);
+});
+$('#media_d').on('change',function(){
+	var fileName = $(this).val();
+	$(this).next('.custom-file-label').html(fileName);
+});
+$('#media_e').on('change',function(){
+	var fileName = $(this).val();
+	$(this).next('.custom-file-label').html(fileName);
+});
+
+
+
+
 const id_soal = document.getElementById("id_soal").value;
+
+
+
 
 const soal = document.getElementById("soal");
 const opsi_text_a = document.getElementById("opsi_text_a");

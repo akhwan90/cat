@@ -2,33 +2,176 @@
 namespace App\Controllers\Admin;
 use CodeIgniter\Controller;
 use App\Controllers\BaseController;
+use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 
 class Soal extends BaseController {
 	
 	public function index() {
-		$d['jenis_soal'] = $this->jenis_soal;
-
 		$d['p'] = 'admin/soal';
 		$d['js'] = 'soal';
 		$d['title'] = 'Soal';
 		return view('template_admin', $d);
 	}
 
-	public function detil_per_jenis($jenis, $bagian) {
 
-		$d['p'] = 'admin/soal_detil_per_jenis';
+	public function import() {
+		$d['p'] = 'admin/soal_form_import';
 		$d['js'] = 'soal';
-		$d['title'] = 'Soal Jenis '.$jenis.' Bagian '.$bagian;
-		$d['jenis'] = $jenis;
-		$d['bagian'] = $bagian;
+		$d['title'] = 'Import Data Soal';
+		$d['title_icon'] = '<i class="fa fa-upload"></i> ';
+
+		$get_mapel = $this->db->table('m_mapel')->get()->getResultArray();
+	    $d['p_mapel'] = [''=>'-'];
+	    if (!empty($get_mapel)) {
+	    	foreach ($get_mapel as $mpl) {
+	    		$idx = $mpl['id'];
+	    		$d['p_mapel'][$idx] = $mpl['nama'];
+	    	}
+	    }
 
 		return view('template_admin', $d);
 	}
 
-	public function form_soal($jenis, $bagian, $id_soal) {
-		$idx_detil_jenis_soal = $jenis.$bagian;
-		$detil_jenis_soal = $this->jenis_soal[$idx_detil_jenis_soal];
+	public function import_ok() {
+		$p = $this->request->getPost();
 
+		$validated_upload = $this->validate([
+		    'file_excel' => 'uploaded[file_excel]|max_size[file_excel,1024]|ext_in[file_excel,xlsx]'
+		]);
+
+		$file = $this->request->getFile('file_excel');
+
+
+		$errors = $this->validation->getErrors();
+
+		if ($validated_upload){
+			$file_excel = $file->getRandomName();
+			$file->move('./uploads/temp', $file_excel);
+
+			$filePath = './uploads/temp/'.$file_excel;
+			$reader = ReaderEntityFactory::createReaderFromFile($filePath);
+
+			$reader->open($filePath);
+
+			$berhasil = 0;
+			$gagal = 0;
+
+			foreach ($reader->getSheetIterator() as $sheet) {
+                if ($sheet->getIndex() === 0) { 
+                    $no = 0;
+                    foreach ($sheet->getRowIterator() as $row) {
+                    	if ($no > 0) {
+	                        $cells = $row->toArray();
+
+	                        $data_soal = [
+	                        	'id_guru'=>session('id'),
+	                        	'id_mapel'=>$p['id_mapel'],
+	                        	'bobot'=>0,
+	                        	'soal'=>$cells[0],
+	                        	'opsi_a'=>$cells[1],
+	                        	'opsi_b'=>$cells[2],
+	                        	'opsi_c'=>$cells[3],
+	                        	'opsi_d'=>$cells[4],
+	                        	'opsi_e'=>$cells[5],
+	                        	'jawaban'=>strtolower($cells[6]),
+	                        	'tgl_input'=>date('Y-m-d H:i:s'),
+	                        	'jml_benar'=>0,
+	                        	'jml_salah'=>0,
+	                        ];
+
+	                        $builder = $this->db->table('m_soal');
+
+							$queri = $builder->insert($data_soal);
+
+							if ($queri) {
+								$berhasil++;
+							} else {
+								$gagal++;
+							}
+	                    }
+
+	                    $no++;
+                    }
+                }
+            }
+
+
+			$reader->close();
+
+            return redirect()->to(base_url('admin/soal/form_import'))->with('errors_upload_peserta', '<div class="alert alert-success">Berhasil : '.$berhasil.', gagal : '.$gagal.'</div>');
+
+		} else {
+            return redirect()->to(base_url('admin/soal/import'))->with('errors_upload_peserta', '<div class="alert alert-danger">Terjadi kesalahan : '.json_encode($errors).'</div>');
+		}
+	}
+
+	public function datatabel() {
+
+        if ($this->request->isAJAX()) {
+			$p = $this->request->getPost();
+
+            $start = $p['start'];
+            $length = $p['length'];
+            $draw = $p['draw'];
+            $search = $p['search'];
+
+            $builder = $this->db->table('m_soal');
+            $builder->groupStart();
+            $builder->where('id_guru', session('id'));
+            $builder->groupEnd();
+            $builder->groupStart();
+            $builder->like('soal', $search['value']);
+            $builder->groupEnd();
+            $builder->select('id');
+            $d_total_row = $builder->countAllResults();
+
+            // untuk data
+            $b2 = $this->db->table('m_soal');
+            $builder->groupStart();
+            $builder->where('id_guru', session('id'));
+            $builder->groupEnd();
+            $builder->groupStart();
+            $builder->like('soal', $search['value']);
+            $builder->groupEnd();
+            $b2->select('*');
+            $b2->limit($length, $start);
+            $b2->orderBy('id', 'asc');
+            $q_datanya = $b2->get()->getResultArray();
+
+
+            $data = array();
+            $no = ($start+1);
+            
+            foreach ($q_datanya as $d) {
+                $data_ok = array();
+            
+                $link = '
+                <a href="'.base_url().'/admin/soal/edit/'.$d['id'].'" class="btn btn-success btn-sm"><i class="fa fa-edit"></i> Edit</a>
+                <a href="#" onclick="return hapus('.$d['id'].');" class="btn btn-danger btn-sm"><i class="fa fa-times"></i> Hapus</a>';
+              
+                $data_ok[] = $no;
+                $data_ok[] = $link;
+                $data_ok[] = $d['soal'];
+
+                $data[] = $data_ok;
+
+                $no++;
+            }
+
+            $json_data = array(
+				"draw" => $draw,
+				"iTotalRecords" => $d_total_row,
+				"iTotalDisplayRecords" => $d_total_row,
+				"data" => $data
+			);
+
+			return $this->response->setJSON($json_data);
+        } else {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+	}
+
+	public function edit($id_soal) {
 		// get detil isi soal = 
 		if (intval($id_soal) > 0) {
 			$builder = $this->db->table('m_soal');
@@ -37,165 +180,185 @@ class Soal extends BaseController {
 	    } else {
 	    	$detil_soal = [
 	    		'id'=>0,
-	    		'jenis'=>$jenis,
-	    		'bagian'=>$bagian,
-	    		'urutan'=>'',
-	    		'soal_text'=>'',
-	    		'soal_gambar'=>'',
-	    		'kunci'=>"[]",
-	    		'opsi_a_text'=>'',
-	    		'opsi_a_gambar'=>'',
-	    		'opsi_a_nilai'=>0,
-	    		'opsi_b_text'=>'',
-	    		'opsi_b_gambar'=>'',
-	    		'opsi_b_nilai'=>0,
-	    		'opsi_c_text'=>'',
-	    		'opsi_c_gambar'=>'',
-	    		'opsi_c_nilai'=>0,
-	    		'opsi_d_text'=>'',
-	    		'opsi_d_gambar'=>'',
-	    		'opsi_d_nilai'=>0,
-	    		'opsi_e_text'=>'',
-	    		'opsi_e_gambar'=>'',
-	    		'opsi_e_nilai'=>0,
-	    		'opsi_f_text'=>'',
-	    		'opsi_f_gambar'=>'',
-	    		'opsi_f_nilai'=>0,
+	    		'id_guru'=>'',
+	    		'id_mapel'=>old('id_mapel', ''),
+	    		'file'=>'',
+	    		'soal'=>old('soal', ''),
+	    		'opsi_a'=>old('opsi_a', ''),
+	    		'opsi_b'=>old('opsi_b', ''),
+	    		'opsi_c'=>old('opsi_c', ''),
+	    		'opsi_d'=>old('opsi_d', ''),
+	    		'opsi_e'=>old('opsi_e', ''),
+	    		'media_a'=>'',
+	    		'media_b'=>'',
+	    		'media_c'=>'',
+	    		'media_d'=>'',
+	    		'media_e'=>'',
+	    		'jawaban'=>'',
 	    	];
 	    }
 
+		$get_mapel = $this->db->table('m_mapel')->get()->getResultArray();
+	    $p_mapel = [''=>'-'];
+	    if (!empty($get_mapel)) {
+	    	foreach ($get_mapel as $mpl) {
+	    		$idx = $mpl['id'];
+	    		$p_mapel[$idx] = $mpl['nama'];
+	    	}
+	    }
 
-		$jml_harus_jawab = $detil_jenis_soal['jml_harus_jawab'];
-		$multi_kunci = $detil_jenis_soal['multi_kunci'];
-		$jml_opsi = $detil_jenis_soal['jml_opsi'];
-		$soal_gambar = $detil_soal['soal_gambar'];
-		$jenis_soal = $detil_soal['jenis'];
-
-		$pecah_kunci = json_decode($detil_soal['kunci'], true);
-
-		$opsi = $this->huruf_opsi;
-
-		$img_src_soal = '#';
-		$file_path = ROOTPATH.'/public/upload/'.$detil_soal['soal_gambar'];
+		$img_src_soal = '';
+		$file_path = ROOTPATH.'/public/uploads/gambar_soal/'.$detil_soal['file'];
 		if (is_file($file_path)) {
-			$img_src_soal = base_url().'/public/upload/'.$soal_gambar;
+			$img_src_soal = '<img src="'.base_url().'/uploads/gambar_soal/'.$detil_soal['file'].'" id="soal_preview" class="mt-2" style="width: 240px">';
 		}
 
-		$form = '<form action="#" id="form_soal" method="post" enctype="multipart/form-data">
-		<input type="hidden" name="jenis" id="jenis" value="'.$jenis.'">
-		<input type="hidden" name="bagian" id="bagian" value="'.$bagian.'">
-		<input type="hidden" name="id_soal" id="id_soal" value="'.$id_soal.'">
+		$form = form_open_multipart(base_url('/admin/soal/save')).'
+		<input type="hidden" name="id" id="id" value="'.$detil_soal['id'].'">
 
-		<div class="form-group mb-4">
-			<label>Urutan Nomor Soal</label>
-			<input type="number" name="urutan" id="urutan" class="form-control" required value="'.$detil_soal['urutan'].'">
-			<label>Soal</label>
-			<input type="text" name="soal" id="soal" class="form-control" required value="'.$detil_soal['soal_text'].'">
-			<input type="file" name="soal_file" id="soal_file" class="mt-1">
-			<img src="'.$img_src_soal.'" id="soal_preview" class="mt-2" style="width: 200px">
+		<div class="form-row mb-4">
+			<div class="col-lg-9">
+				<label>MaPel</label>
+				'.form_dropdown('id_mapel', $p_mapel, $detil_soal['id_mapel'], 'class="form-control"').'
+			</div>
+		</div>
+		<div class="form-row mb-4">
+			<div class="col-lg-9">
+				<label>Soal</label>
+				<textarea name="soal" id="soal" class="form-control" required>'.$detil_soal['soal'].'</textarea>
+				<div class="custom-file mt-1">
+					<input type="file" name="file" id="file" class="custom-file-input" id="customFile">
+					<label class="custom-file-label" for="customFile">Upload file soal</label>
+				</div>
+			</div>
+			<div class="col-lg-3">'.$img_src_soal.'</div>
 		</div>';
 
-		// jika jenis soal bukan E
-		if ($jenis_soal != "E") {
-			// jika kunci jawaban lebih dari 1
-			if ($jml_harus_jawab > 1 || $multi_kunci) {
-				for ($j = 0; $j < $jml_opsi; $j++) {
-					$idx_opsi = $opsi[$j];
-					$selekted = '';
-					if (in_array($idx_opsi, $pecah_kunci)) {
-						$selekted = 'checked';
-					}
-					$value_opsi = empty($detil_soal['opsi_'.$idx_opsi.'_text']) ? '' : $detil_soal['opsi_'.$idx_opsi.'_text'];
+		for ($i = 1; $i <= $this->jml_opsi; $i++) {
+			$img_src_opsi = '';
+			$huruf_opsi = $this->opsi_huruf[$i];
 
-					$img_src = '#';
-
-					$file_image = empty($detil_soal['opsi_file_'.$idx_opsi]) ? '' : $detil_soal['opsi_file_'.$idx_opsi];
-
-					if (array_key_exists('opsi_file_'.$idx_opsi, $detil_soal) == false) {
-						$file_image = $detil_soal['opsi_'.$idx_opsi.'_gambar'];
-					}
-
-					$file_path = ROOTPATH.'/public/upload/'.$file_image;
-					if (is_file($file_path)) {
-						$img_src = base_url().'/public/upload/'.$file_image;
-					}
-
-					$form .= '
-					<div class="form-group mt-3">
-						<div class="input-group">
-							<div class="input-group-prepend">
-								<span class="input-group-text">'.$idx_opsi.'</span>
-							</div>
-							<div class="input-group-prepend">
-								<span class="input-group-text">
-									<input type="checkbox" name="kunci[]" id="opsi_text'.$idx_opsi.'" value="'.$idx_opsi.'" '.$selekted.'>
-								</span>
-							</div>
-							<input type="text" name="opsi_text['.$idx_opsi.']" id="opsi_text_'.$idx_opsi.'" class="form-control" value="'.$value_opsi.'">
-						</div>
-					</div>
-					<div class="form-group mt-1">
-						<input type="file" name="opsi_file_'.$idx_opsi.'" id="opsi_file_'.$idx_opsi.'" class="mt-1">
-						<img src="'.$img_src.'"  id="opsi_preview_'.$idx_opsi.'" class="mt-2" style="width: 200px">
-					</div>';
-				}
-				// jika kunci jawaban = 1
-			} else {
-				for ($j = 0; $j < $jml_opsi; $j++) {
-					$idx_opsi = $opsi[$j];
-					$selekted = '';
-					if (in_array($idx_opsi, $pecah_kunci)) {
-						$selekted = 'checked';
-					}
-					$value_opsi = empty($detil_soal['opsi_'.$idx_opsi.'_text']) ? '' : $detil_soal['opsi_'.$idx_opsi.'_text'];
-
-					$img_src = '#';
-					if (!empty($detil_soal['opsi_file_'.$idx_opsi])) {
-						$file_path = ROOTPATH.'/public/upload/'.$detil_soal['opsi_file_'.$idx_opsi];
-						if (is_file($file_path)) {
-							$img_src = base_url().'/public/upload/'.$detil_soal['opsi_file_'.$idx_opsi];
-						}
-					}
-
-					$form .= '
-					<div class="form-group mt-3">
-						<div class="input-group">
-							<div class="input-group-prepend">
-								<span class="input-group-text">'.$idx_opsi.'</span>
-							</div>
-							<div class="input-group-prepend">
-								<span class="input-group-text">
-									<input type="radio" name="kunci" id="opsi_'.$idx_opsi.'" value="'.$idx_opsi.'" '.$selekted.'>
-								</span>
-							</div>
-							<input type="text" name="opsi_text['.$idx_opsi.']" id="opsi_text_'.$idx_opsi.'" class="form-control" value="'.$value_opsi.'">
-						</div>
-						<input type="file" name="opsi_file_'.$idx_opsi.'" id="opsi_file_'.$idx_opsi.'" class="mt-1">
-						<img src="'.$img_src.'"  id="opsi_preview_'.$idx_opsi.'" class="mt-2" style="width: 200px">
-					</div>
-					';
-				}
-			
+			$file_path = ROOTPATH.'/public/uploads/gambar_opsi/'.$detil_soal['media_'.$huruf_opsi];
+			if (is_file($file_path)) {
+				$img_src_opsi = '<img src="'.base_url().'/public/uploads/gambar_opsi/'.$detil_soal['media_'.$huruf_opsi].'" id="soal_preview" class="mt-2" style="width: 200px">';
 			}
-		// jika jenis soal E
-		} else {
-			$form .= '<div class="form-group mt-4">
-			<div><label>Jenis</label>'.form_dropdown('favorable', [''=>'','F'=>'Favorable','U'=>'Unfavorable'], '', 'class="form-control" required').'</div></div>';
+
+			$form .= '<div class="form-row mb-4">
+					<div class="col-lg-9">
+						<label>Opsi '.strtoupper($huruf_opsi).'</label>
+						<textarea name="opsi_'.$huruf_opsi.'" id="opsi_'.$huruf_opsi.'" class="form-control text-editor" required>'.$detil_soal['opsi_'.$huruf_opsi].'</textarea>
+						<div class="custom-file mt-1">
+							<input type="file" name="media_'.$huruf_opsi.'" id="media_'.$huruf_opsi.'" class="custom-file-input" id="customFile">
+							<label class="custom-file-label" for="customFile">Upload file opsi '.strtoupper($huruf_opsi).'</label>
+						</div>
+					</div>
+					<div class="col-lg-3">'.$img_src_opsi.'</div>
+				</div>';
+
 		}
 
-		$form .= '<div class="form-group mt-4">
-			<div><label><input type="checkbox" name="setelah_simpan_input_lagi" value="1" checked> Setelah simpan, input lagi</label></div>
+		$form .= '<div class="form-row mb-4">
+			<div class="col-lg-3">
+			<label>Kunci Jawaban</label>
+			'.form_dropdown('jawaban', $this->p_jawaban, $detil_soal['jawaban'], 'class="form-control"').'
+			</div>
+			</div>';
 
+		$form .= '
 			<button type="submit" class="btn btn-primary btn-lg" id="tb_simpan"><i class="fa fa-check"></i> Simpan</button>
-			<a href="'.base_url().'/admin/soal/detil_per_jenis/'.$jenis.'/'.$bagian.'" class="btn btn-secondary btn-lg"><i class="fa fa-arrow-left"></i> Kembali</a>
+			<a href="'.base_url('/admin/soal').'" class="btn btn-secondary btn-lg"><i class="fa fa-arrow-left"></i> Kembali</a>
 		</div>';
-		$form .= '</form>';
+		$form .= form_close();
 
 		$d['p'] = 'admin/soal_form';
 		$d['js'] = 'soal_form';
 		$d['title'] = 'Form Soal';
+		$d['enable_editor'] = true;
 		$d['html_form'] = $form;
 		return view('template_admin', $d);
+	}
+
+	public function save() {
+		$p = $this->request->getPost();
+
+		$validation =  \Config\Services::validation();
+		$validation->setRules([
+			'soal' => 'required',
+			'id_mapel' => 'required',
+			'jawaban' => 'required',
+			'file' => 'max_size[file,1024]|mime_in[file,image/png,image/jpg,image/jpeg]',
+			'media_a' => 'max_size[media_a,1024]|mime_in[media_a,image/png,image/jpg,image/jpeg]',
+			'media_b' => 'max_size[media_b,1024]|mime_in[media_b,image/png,image/jpg,image/jpeg]',
+			'media_c' => 'max_size[media_c,1024]|mime_in[media_c,image/png,image/jpg,image/jpeg]',
+			'media_d' => 'max_size[media_d,1024]|mime_in[media_d,image/png,image/jpg,image/jpeg]',
+			'media_e' => 'max_size[media_e,1024]|mime_in[media_e,image/png,image/jpg,image/jpeg]',
+		]);
+		$validation->withRequest($this->request)->run();
+		$errors = $validation->getErrors();
+
+
+		if ($errors) {
+			return redirect()->back()->withInput()->with('errors', '<div class="alert alert-danger">'.implode("<br>", $validation->getErrors()).'</div>');
+		} else {
+			$id = intval($p['id']);
+
+			$nama_file_upload = ['file', 'media_a', 'media_b', 'media_c', 'media_d', 'media_e'];
+
+			$pdata = [
+				'id_guru'=>session('id'),
+				'id_mapel'=>$p['id_mapel'],
+				'bobot'=>0,
+				'soal'=>$p['soal'],
+				'opsi_a'=>$p['opsi_a'],
+				'opsi_b'=>$p['opsi_b'],
+				'opsi_c'=>$p['opsi_c'],
+				'opsi_d'=>$p['opsi_d'],
+				'opsi_e'=>$p['opsi_e'],
+				'jawaban'=>$p['jawaban'],
+				'tgl_input'=>date('Y-m-d H:i:s'),
+				'jml_benar'=>0,
+				'jml_salah'=>0,
+			];
+
+			if ($id > 0) {
+				// get file 
+				$get_file = $this->db->table('m_soal')
+				->select('file, media_a, media_b, media_c, media_d, media_e')
+				->where('id', $id)->get()->getRowArray();
+
+			}
+
+			foreach ($nama_file_upload as $fu) {
+				$file_satu = $this->request->getFile($fu);
+				if ($file_satu->isValid() && ! $file_satu->hasMoved()) {
+					$newName = $file_satu->getRandomName();
+					if ($fu == "file") {
+						$file_satu->move('./uploads/gambar_soal', $newName);
+						$pdata['tipe_file'] = $file_satu->getClientExtension();
+
+						if (is_file('./uploads/gambar_soal/'.$get_file['file'])) {
+							@unlink('./uploads/gambar_soal/'.$get_file['file']);
+						}
+					} else {
+						$file_satu->move('./uploads/gambar_opsi', $newName);
+
+						if (is_file('./uploads/gambar_opsi/'.$get_file[$fu])) {
+							@unlink('./uploads/gambar_opsi/'.$get_file[$fu]);
+						}
+					}
+					$pdata[$fu] = $newName;
+				}
+			}
+
+			if ($id < 1) {
+				$this->db->table('m_soal')->insert($pdata);
+			} else {
+				$this->db->table('m_soal')->where('id', $id)->update($pdata);
+			}
+
+			return redirect()->to(base_url('/admin/soal/edit/'.$id))->with('errors', '<div class="alert alert-success">Disimpan</div>');
+
+		}
 	}
 
 	public function form_soal_save() {
@@ -485,15 +648,6 @@ class Soal extends BaseController {
 		return $this->response->setJSON($ret);
 	}
 
-	public function tes($id_soal) {
-		$builder = $this->db->table('m_soal');
-        $builder->where('id', $id_soal);
-        $builder->select('opsi_gambar');
-        $data = json_decode($builder->get()->getRow()->opsi_gambar, true);
-		
-		echo var_dump($data);
-	}
-
 	public function upload_file($name, $allowed, $max_size, $target, $filename, $replace=true) {
 		$imageFileType = strtolower(pathinfo($_FILES[$name]["name"],PATHINFO_EXTENSION));
 		$target_dir = ROOTPATH . $target;
@@ -534,75 +688,6 @@ class Soal extends BaseController {
 		} else {
 			return $uploadOk;
 		}
-	}
-
-	public function datatabel_detil_jenis($jenis, $bagian) {
-
-        if ($this->request->isAJAX()) {
-			$p = $this->request->getPost();
-
-            $start = $p['start'];
-            $length = $p['length'];
-            $draw = $p['draw'];
-            $search = $p['search'];
-
-            $builder = $this->db->table('m_soal');
-            $builder->groupStart();
-            $builder->where('jenis', $jenis);
-            $builder->where('bagian', $bagian);
-            $builder->groupEnd();
-            $builder->groupStart();
-            $builder->like('soal_text', $search['value']);
-            $builder->groupEnd();
-            $builder->select('id');
-            $d_total_row = $builder->countAllResults();
-
-            // untuk data
-            $b2 = $this->db->table('m_soal');
-            $b2->groupStart();
-            $b2->where('jenis', $jenis);
-            $b2->where('bagian', $bagian);
-            $b2->groupEnd();
-            $b2->groupStart();
-            $b2->like('soal_text', $search['value']);
-            $b2->groupEnd();
-            $b2->select('*');
-            $b2->limit($length, $start);
-            $b2->orderBy('id', 'asc');
-            $q_datanya = $b2->get()->getResultArray();
-
-
-            $data = array();
-            $no = ($start+1);
-            
-            foreach ($q_datanya as $d) {
-                $data_ok = array();
-            
-                $link = '
-                <a href="'.base_url().'/admin/soal/form_soal/'.$d['jenis'].'/'.$d['bagian'].'/'.$d['id'].'" class="btn btn-success btn-sm"><i class="fa fa-edit"></i> Edit</a>
-                <a href="#" onclick="return hapus('.$d['id'].');" class="btn btn-danger btn-sm"><i class="fa fa-times"></i> Hapus</a>';
-              
-                $data_ok[] = $no;
-                $data_ok[] = $link;
-                $data_ok[] = $d['urutan'];
-                $data_ok[] = $d['soal_text'];
-
-                $data[] = $data_ok;
-
-                $no++;
-            }
-
-            $json_data = array(
-				"draw" => $draw,
-				"iTotalRecords" => $d_total_row,
-				"iTotalDisplayRecords" => $d_total_row,
-				"data" => $data
-			);
-
-			return $this->response->setJSON($json_data);
-        } else {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-        }
 	}
 
 	public function detil() {

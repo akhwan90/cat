@@ -44,21 +44,13 @@ class BaseController extends Controller
 		$this->db = \Config\Database::connect();
 		$this->validation = \Config\Services::validation();
 
-
-		$this->p_jk = [''=>'-','Laki-laki'=>'Laki-laki','Perempuan'=>'Perempuan'];
-		$this->p_pendidikan = [
-			''=>'-',
-			'SD'=>'SD',
-			'SMP'=>'SMP',
-			'SMA'=>'SMA',
-			'D3'=>'D3',
-			'S1'=>'S1',
-			'S2'=>'S2',
-			'S3'=>'S3'
-		];
-
-		
-
+		$this->jml_opsi = 5;
+		$this->opsi_huruf = ['-','a','b','c','d','e'];
+		$this->p_jawaban = [''=>'-'];
+		for ($i = 1; $i<= $this->jml_opsi; $i++) {
+			$idopsi = $this->opsi_huruf[$i];
+			$this->p_jawaban[$idopsi] = $idopsi;
+		}
 	}
 
 }

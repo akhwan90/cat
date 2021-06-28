@@ -6,32 +6,37 @@ function dt() {
 
 dt();
 
-function simpan() {
-	let data = $("#mdl_edit_form").serialize();
-	$.ajax({
-	    type: "POST",
-	    data: data,
-	    url: uri_modul + "simpan",
-	    beforeSend: function(){
-			$("#mdl_edit_form input, select, button").attr("disabled", true);
-		},
-	    success: function(r, textStatus, jqXHR) {	
-	    	$("#mdl_edit_form input, select, button").attr("disabled", false);
-	        if (r.success == false) {
-	            alert(r.message);
-	        } else {
+const form_peserta = document.getElementById("mdl_edit_form");
+form_peserta.addEventListener('submit', e => {
+	e.preventDefault();
+	var data = new FormData(e.target);
+
+    $.ajax({
+        type: "POST",
+        url: uri_modul + "simpan",
+        data: data,
+        processData: false,
+        contentType: false,
+        beforeSend: function() {
+            $("#mdl_edit_tb_save").attr("disabled", true);
+        	$("#mdl_edit_tb_save").html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+        },
+        success: function (r){
+            $("#mdl_edit_tb_save").attr("disabled", false);
+        	$("#mdl_edit_tb_save").html('<i class="fa fa-check"></i> Simpan');
+            alert(r.message);
+            if (r.success) {
+	        	dt();
 				$("#mdl_edit").modal('hide');
-				dt();
-	        }
-	    },
-	    error: function(xhr) {
-			$("#mdl_edit_form input, select, button").attr("disabled", false);
-			console.log(xhr)
-	    }
-	});
+			}
+        },
+        error: function(xhr){
+            $("#mdl_edit_tb_save").attr("disabled", false);
+        	$("#mdl_edit_tb_save").html('<i class="fa fa-check"></i> Simpan');
+        }
+    });
 	
-	return false;
-}
+});
 
 
 function edit(id) {
@@ -40,10 +45,6 @@ function edit(id) {
 		$("#_id").val(0);
 		$("#_mode").val('add');
 		$("#nama").val('');
-		$("#waktu_mulai_tgl").val('');
-		$("#waktu_mulai_jam").val('');
-		$("#waktu_selesai_tgl").val('');
-		$("#waktu_selesai_jam").val('');
 	} else {
 		$.ajax({
 		    type: "POST",
@@ -59,11 +60,13 @@ function edit(id) {
 		        } else {
 					$("#_id").val(r.results.id);
 					$("#_mode").val('edit');
-					$("#nama").val(r.results.nama);
-					$("#waktu_mulai_tgl").val(r.results.waktu_mulai_tgl);
-					$("#waktu_mulai_jam").val(r.results.waktu_mulai_jam);
-					$("#waktu_selesai_tgl").val(r.results.waktu_selesai_tgl);
-					$("#waktu_selesai_jam").val(r.results.waktu_selesai_jam);
+					$("#nama").val(r.results.nama_ujian);
+					$("#id_mapel").val(r.results.id_mapel);
+					$("#jumlah_soal").val(r.results.jumlah_soal);
+					$("#waktu").val(r.results.waktu);
+					$("#jenis").val(r.results.jenis);
+					$("#tgl_mulai").val(r.results.tgl_mulai);
+					$("#terlambat").val(r.results.terlambat);
 		        }
 		    },
 		    error: function(xhr) {
@@ -76,7 +79,6 @@ function edit(id) {
 	$("#mdl_edit").modal('show');
 	return false;
 }
-
 
 function hapus(id) {
 	if (confirm('Yakin akan dihapus..?')) {
@@ -101,45 +103,22 @@ function hapus(id) {
 	return false;
 }
 
-
-// KIRIM EMAIL
-function kirim_email(id, email) {
-	$("#mdl_kirim_email_id").val(id);
-	$("#alamat_email").val(email);
-	$("#mdl_kirim_email").modal('show');
-	$('#mdl_kirim_email').on('shown.bs.modal', function () {
-	    $('#alamat_email').focus();
+function refresh_token(id) {
+	id = parseInt(id);
+	$.ajax({
+	    type: "GET",
+	    url: uri_modul + "refresh_token/"+id,
+	    success: function(r, textStatus, jqXHR) {	
+	        if (r.success == false) {
+	            alert(r.message);
+	        } else {
+	        	dt();
+	        }
+	    },
+	    error: function(xhr) {
+			console.log(xhr)
+	    }
 	});
+
 	return false;
 }
-
-const form_kirim_email = document.getElementById("mdl_kirim_email_form");
-form_kirim_email.addEventListener('submit', e => {
-	e.preventDefault();
-	var data = new FormData(e.target);
-
-    $.ajax({
-        type: "POST",
-        url: base_url + '/admin/peserta/kirim_email',
-        data: data,
-        processData: false,
-        contentType: false,
-        beforeSend: function() {
-            $("#mdl_kirim_email_tb_save").attr("disabled", true);
-        	$("#mdl_kirim_email_tb_save").html('<i class="fa fa-spinner fa-spin"></i> Mengirimkan email...');
-        },
-        success: function (r){
-            $("#mdl_kirim_email_tb_save").attr("disabled", false);
-        	$("#mdl_kirim_email_tb_save").html('<i class="fa fa-check"></i> Kirim');
-            alert(r.message);
-            if (r.success) {
-				$("#mdl_kirim_email").modal('hide');
-			}
-        },
-        error: function(xhr){
-            $("#mdl_kirim_email_tb_save").attr("disabled", false);
-        	$("#mdl_kirim_email_tb_save").html('<i class="fa fa-check"></i> Kirim');
-        }
-    });
-	
-});

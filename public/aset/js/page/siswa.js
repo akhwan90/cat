@@ -81,6 +81,7 @@ function edit(id) {
 		    type: "POST",
 		    data: {id: id},
 		    url: uri_modul + "detil",
+		    headers: {'X-CSRF-TOKEN': $('meta[name="X-CSRF-TOKEN"]').attr('content')},
 		    beforeSend: function(){
 				$("#mdl_edit_form input, select, button").attr("disabled", true);
 			},

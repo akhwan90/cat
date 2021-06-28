@@ -83,6 +83,22 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 	    $routes->post('import_ok', 'Admin\Mapel::import_ok');
     });
 
+    $routes->group('ujian', function($routes) {	
+	    $routes->get('', 'Admin\Ujian::index');
+	    $routes->post('datatabel', 'Admin\Ujian::datatabel');
+	    $routes->post('detil', 'Admin\Ujian::detil');
+	    $routes->post('simpan', 'Admin\Ujian::simpan');
+	    $routes->post('hapus', 'Admin\Ujian::hapus');
+	    $routes->get('form_import', 'Admin\Ujian::form_import');
+	    $routes->post('import_ok', 'Admin\Ujian::import_ok');
+	    $routes->get('refresh_token/(:num)', 'Admin\Ujian::refresh_token/$1');
+
+	    // setting
+	    $routes->get('setting/(:num)', 'Admin\Ujian_setting::index/$1');
+	    $routes->get('setting/(:num)/get_soal', 'Admin\Ujian_setting::get_soal/$1');
+	    // $routes->get('get_detil_soal/(:num)', 'Admin\Ujian_setting::detil_soal/$1');
+    });
+
     $routes->group('jenis_ujian', function($routes) {	
 	    $routes->get('', 'Admin\Jenis_ujian::index');
 	    $routes->get('edit/(:num)', 'Admin\Jenis_ujian::edit/$1');
@@ -91,15 +107,17 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 
     $routes->group('soal', function($routes) {	
 	    $routes->get('', 'Admin\Soal::index');
-	    $routes->get('detil_per_jenis/(:alpha)/(:num)', 'Admin\Soal::detil_per_jenis/$1/$2');
-	    $routes->get('form_soal/(:alpha)/(:num)/(:num)', 'Admin\Soal::form_soal/$1/$2/$3');
-	    $routes->post('form_soal_save', 'Admin\Soal::form_soal_save');
-	    $routes->post('datatabel/(:alpha)/(:num)', 'Admin\Soal::datatabel_detil_jenis/$1/$2');
+	    $routes->post('datatabel', 'Admin\Soal::datatabel');
+	    $routes->get('edit/(:num)', 'Admin\Soal::edit/$1');
+	    $routes->post('save', 'Admin\Soal::save');
+	    $routes->get('import', 'Admin\Soal::import');
+	    $routes->post('import_ok', 'Admin\Soal::import_ok');
+	    
+
 	    $routes->post('hapus', 'Admin\Soal::hapus');
-	    $routes->get('gen_soal/(:alphanum)', 'Admin\Soal::gen_soal/$1');
-	    $routes->get('update_urutan/(:alpha)/(:num)', 'Admin\Soal::update_urutan/$1/$2');
     });
 
+    /*
     $routes->group('ujian', function($routes) {	
 	    $routes->get('', 'Admin\Ujian::index');
 	    $routes->get('lihat_hasil/(:num)', 'Admin\Ujian::lihat_hasil/$1');
@@ -133,6 +151,7 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 	    $routes->get('ujicoba_hitung_a/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::ujicoba_hitung_a/$1/$2');
 	    $routes->get('ujicoba_hitung_b/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::ujicoba_hitung_b/$1/$2');
     });
+    */
 
     $routes->group('admin', function($routes) {	
 	    $routes->get('', 'Admin\Admin::index');

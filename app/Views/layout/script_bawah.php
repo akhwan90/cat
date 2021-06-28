@@ -43,6 +43,12 @@
 <script src="<?=base_url();?>/aset/js/page/base.js"></script>
 
 <?php
+if (isset($enable_editor) && $enable_editor) {
+	echo '<script src="'.base_url().'/aset/editor/ckeditor.js"></script>';
+}
+?>
+
+<?php
 if (isset($js)) {
 	if (!is_array($js)) {
 		if (!empty($js)) {

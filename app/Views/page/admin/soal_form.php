@@ -1,3 +1,4 @@
+
 <main class="main">
 
 	<div class="mt-3 ml-3 mr-3 mb-3">
@@ -8,6 +9,7 @@
 					<div class="card">
 						<div class="card-header"><i class="fa fa-home"></i> <?=$title;?></div>
 						<div class="card-body">
+							<?=session()->getFlashdata('errors');?>
 							<?=$html_form;?>
 						</div>
 					</div>

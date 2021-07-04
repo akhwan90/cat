@@ -45,9 +45,9 @@
 												echo '
 												<tr>
 													<td class="text-center">'.$no.'</td> 
-													<td>'.$tes['nama'].'</td> 
-													<td class="text-center">'.tjs($tes['waktu_mulai']).'</td> 
-													<td class="text-center">'.tjs($tes['waktu_selesai']).'</td> 
+													<td>'.$tes['nama_ujian'].'</td> 
+													<td class="text-center">'.tjs($tes['tgl_mulai']).'</td> 
+													<td class="text-center">'.tjs($tes['terlambat']).'</td> 
 													<td class="text-center">'.$status_selesai.'</td> 
 													<td class="text-center">'.$link_ikuti.'</td> 
 												</tr>';

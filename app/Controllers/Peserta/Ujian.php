@@ -6,11 +6,11 @@ use App\Controllers\BaseController;
 class Ujian extends BaseController {
 	
 	public function index() {
-		$list_tes = $this->db->table('m_ujian a');
-		$list_tes->where('b.id', session('peserta_id'));
-		$list_tes->join('m_peserta b', 'a.id = b.gelombang', 'left');
-		$list_tes->join('hasil_rekomendasi c', 'a.id = c.id_ujian AND b.id = c.id_peserta', 'left');
-        $list_tes->select('a.*, c.is_selesai');
+		$list_tes = $this->db->table('tr_ikut_ujian a');
+		$list_tes->where('c.id', session('id'));
+		$list_tes->join('m_siswa b', 'a.id_user = b.id', 'left');
+		$list_tes->join('m_admin c', "b.id = c.kon_id AND c.level = 'siswa'");
+        $list_tes->select('a.*, b.nama');
         $list_tes->groupBy('a.id');
         $get_list_tes = $list_tes->get()->getResultArray();
 

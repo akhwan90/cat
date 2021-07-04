@@ -38,7 +38,17 @@
 					<i class="nav-icon fa fa-file"></i> Soal
 				</a>
 			</li>
-
+		<?php } else if (session('level') == "siswa") { ?>
+			<li class="nav-item open">
+				<a class="nav-link" href="<?=base_url('peserta/ujian');?>">
+					<i class="nav-icon fa fa-edit"></i> Ujian
+				</a>
+			</li>
+			<li class="nav-item open">
+				<a class="nav-link" href="<?=base_url('peserta/ujian_history');?>">
+					<i class="nav-icon fa fa-file"></i> History Ujian
+				</a>
+			</li>
 		<?php } ?>
 		</ul>
 	</nav>

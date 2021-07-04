@@ -69,7 +69,7 @@ class Ujian extends BaseController {
                 <a href="#" onclick="return hapus('.$d['id'].');" class="btn btn-danger" title="Hapus Data"><i class="fa fa-times"></i> </a>';
                 $link .= '</div>';
 
-                $link .= ' <a href="'.base_url('/admin/ujian/setting/'.$d['id']).'" class="btn btn-primary btn-sm">Detil</a>';
+                $link .= ' <a href="'.base_url('/admin/ujian/setting/'.$d['id']).'" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Detil</a>';
 
 
                 $data_ok[] = $no;

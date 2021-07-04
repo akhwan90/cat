@@ -93,9 +93,19 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 	    $routes->post('import_ok', 'Admin\Ujian::import_ok');
 	    $routes->get('refresh_token/(:num)', 'Admin\Ujian::refresh_token/$1');
 
-	    // setting
+	    // setting soal
 	    $routes->get('setting/(:num)', 'Admin\Ujian_setting::index/$1');
 	    $routes->get('setting/(:num)/get_soal', 'Admin\Ujian_setting::get_soal/$1');
+	    $routes->get('setting/(:num)/detil_soal', 'Admin\Ujian_setting::detil_soal/$1');
+	    $routes->get('setting/(:num)/hapus/(:num)', 'Admin\Ujian_setting::hapus/$1/$2');
+	    $routes->get('setting/(:num)/up_soal/(:num)', 'Admin\Ujian_setting::up_soal/$1/$2');
+	    $routes->get('setting/(:num)/down_soal/(:num)', 'Admin\Ujian_setting::down_soal/$1/$2');
+	    $routes->post('setting/(:num)/simpan_ujian_soal', 'Admin\Ujian_setting::simpan_ujian_soal/$1');
+	    // setting peserta
+	    $routes->get('setting/(:num)/get_peserta', 'Admin\Ujian_setting::get_peserta/$1');
+	    $routes->get('setting/(:num)/detil_peserta', 'Admin\Ujian_setting::detil_peserta/$1');
+	    $routes->get('setting/(:num)/hapus_peserta/(:num)', 'Admin\Ujian_setting::hapus_peserta/$1/$2');
+	    $routes->post('setting/(:num)/simpan_ujian_peserta', 'Admin\Ujian_setting::simpan_ujian_peserta/$1');
 	    // $routes->get('get_detil_soal/(:num)', 'Admin\Ujian_setting::detil_soal/$1');
     });
 
@@ -174,12 +184,7 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
     $routes->get('coba3', 'Peserta\Ikuti_ujian::index');
 });
 
-$routes->group('/peserta', ['filter'=>'cek_login_peserta'], function($routes) {
-    $routes->get('/', 'Peserta\Auth::dashboard');
-    $routes->post('perbarui_data_ok', 'Peserta\Auth::perbarui_data_ok');
-    $routes->get('ubah_password', 'Peserta\Auth::ubah_password');
-    $routes->post('ubah_password', 'Peserta\Auth::ubah_password_ok');
-
+$routes->group('/peserta', ['filter'=>'cek_login'], function($routes) {
     $routes->group('ujian', function($routes) {	
 	    $routes->get('', 'Peserta\Ujian::index');
 	    $routes->post('datatabel', 'Peserta\Ujian::datatabel');
@@ -204,11 +209,6 @@ $routes->group('/peserta', ['filter'=>'cek_login_peserta'], function($routes) {
 	    $routes->post('selesai_bagian', 'Peserta\Hitung_hasil_ujian::selesai_bagian');
 	    $routes->post('selesai_ujian', 'Peserta\Hitung_hasil_ujian::selesai_ujian');
 
-
-
-	    $routes->get('coba/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::hitung_kompetensi/$1/$2');
-	    $routes->get('coba2/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::hitung_a/$1/$2');
-	    $routes->get('coba3', 'Peserta\Ikuti_ujian::index');
     });
 });
 

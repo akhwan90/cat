@@ -10,8 +10,24 @@ class Auth extends BaseController {
     }
 
 	public function index() {
+		if (session('is_login')) {
+			return redirect()->to(base_url('/admin'));
+		}
+
 		$this->captcha->reset();
 		$d['capcha'] = $this->captcha->html('#000', '#fff');
+
+		// get instansi 
+		$get_instansi = $this->db->table('instansi')->where('id', 1)->get()->getRowArray();
+
+		if (!empty($get_instansi)) {
+			$d['instansi_nama'] = $get_instansi['nama'];
+			$d['instansi_logo'] = is_file('./uploads/logo/'.$get_instansi['logo']) ? base_url('/uploads/logo/'.$get_instansi['logo']) : '#';
+		} else {
+			$d['instansi_nama'] = 'Nama Instansi belum disetting';
+			$d['instansi_logo'] = 'Logo belum disetting';
+		}
+
 
 		$d['title'] = "Login Aplikasi";
 		
@@ -30,23 +46,6 @@ class Auth extends BaseController {
 		$builder->where('username', $var_post['usernames']);
 		$data = $builder->get()->getRowArray();
 
-		// google recaptcha
-		// $recaptchaResponse = trim($var_post['g-recaptcha-response']);
-  //       $secret='6LcbnpYUAAAAAKTn1DRsa0hboyvqIiZ4KgMAlwkO'; // Secret key 
-  //       $credential = array(
-  //             'secret' => $secret,
-  //             'response' => $var_post['g-recaptcha-response']
-  //       );
-  //       $verify = curl_init();
-  //       curl_setopt($verify, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
-  //       curl_setopt($verify, CURLOPT_POST, true);
-  //       curl_setopt($verify, CURLOPT_POSTFIELDS, http_build_query($credential));
-  //       curl_setopt($verify, CURLOPT_SSL_VERIFYPEER, false);
-  //       curl_setopt($verify, CURLOPT_RETURNTRANSFER, true);
-  //       $response = curl_exec($verify);
- 
-  //       $status= json_decode($response, true);
-
 		
 		$captcha_post = $var_post['captcha'];
 		$cek_captcha = $this->captcha->check($captcha_post);
@@ -59,11 +58,18 @@ class Auth extends BaseController {
 				if ($password === $data['password']) {
 
 					unset($data['password']);
+
+					// get instansi 
+					$get_instansi = $this->db->table('instansi')->where('id', 1)->get()->getRowArray();
+
 					$newdata = $data;
 					$newdata['is_login'] = true;
+					$newdata['instansi_nama'] = $get_instansi['nama'];
+					$newdata['instansi_logo'] = is_file('./uploads/logo/'.$get_instansi['logo']) ? base_url('/uploads/logo/'.$get_instansi['logo']) : '#';
+
 					$this->session->set($newdata);
 
-					return redirect()->to(base_url('admin/dashboard'));
+					return redirect()->to(base_url('admin'));
 				} else {
 					return redirect()->back()->with('error_login', '<div class="alert alert-danger">Login gagal (2)</div>');
 				}

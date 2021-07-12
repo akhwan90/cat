@@ -8,6 +8,7 @@
 					<div class="card">
 						<div class="card-header"><i class="fa fa-home"></i> <?=$title;?></div>
 						<div class="card-body">
+							<?=session()->getFlashdata('error');?>
 
 							<div class="table-responsive">
 								<table class="table table-bordered table-sm table-hover">
@@ -29,17 +30,25 @@
 											$no = 1;
 											foreach ($data_tes as $tes) {
 
-												if (strtotime('now') < strtotime($tes['waktu_mulai'])) {
+												if (strtotime('now') < strtotime($tes['tgl_mulai'])) {
 													$link_ikuti = '<a href="#" class="btn btn-danger col-lg-12"><i class="fa fa-minus-circle"></i> Belum waktunya mengerjakan</a>';
-												} else if (strtotime('now') > strtotime($tes['waktu_selesai'])) {
+												} else if (strtotime('now') > strtotime($tes['terlambat'])) {
 													$link_ikuti = '<a href="#" class="btn btn-danger col-lg-12"><i class="fa fa-minus-circle"></i> Waktu test telah selesai</a>';
 												} else {
-													$link_ikuti = '<a href="'.base_url('peserta/ikuti_ujian/ok/'.$tes['id']).'" class="btn btn-success col-lg-12"><i class="fa fa-edit"></i> Ikuti test</a>';
+													if ($tes['status'] == "N") {
+														$link_ikuti = '<a href="'.base_url('peserta/ikuti_ujian/ok/'.$tes['id']).'" class="btn btn-success col-lg-12"><i class="fa fa-edit"></i> Ikuti test</a>';
+													} else if ($tes['status'] == "D") {
+														$link_ikuti = '<a href="'.base_url('peserta/ikuti_ujian/ok/'.$tes['id']).'" class="btn btn-success col-lg-12"><i class="fa fa-edit"></i> Lanjutkan Mengerjakan</a>';
+													} else if ($tes['status'] == "Y") {
+														$link_ikuti = '<a href="#" class="btn btn-danger col-lg-12"><i class="fa fa-minus-circle"></i> Anda sudah mengerjakan</a>';
+													}
 												}
 
-												$status_selesai = '<i class="fa fa-check"></i> Belum Selesai';
-												if ($tes['is_selesai'] == 1) {
+												$status_selesai = '<i class="fa fa-check"></i> Belum Dikerjakan';
+												if ($tes['status'] == 'Y') {
 													$status_selesai = '<i class="fa fa-minus-circle"></i> Sudah Selesai';
+												} else if ($tes['status'] == 'D') {
+													$status_selesai = '<i class="fa fa-edit"></i> Sedang Dikerjakan';
 												}
 
 												echo '

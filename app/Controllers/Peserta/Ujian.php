@@ -8,9 +8,11 @@ class Ujian extends BaseController {
 	public function index() {
 		$list_tes = $this->db->table('tr_ikut_ujian a');
 		$list_tes->where('c.id', session('id'));
+		// $list_tes->where('a.status', 'N');
 		$list_tes->join('m_siswa b', 'a.id_user = b.id', 'left');
 		$list_tes->join('m_admin c', "b.id = c.kon_id AND c.level = 'siswa'");
-        $list_tes->select('a.*, b.nama');
+		$list_tes->join('tr_guru_tes d', 'a.id_tes = d.id');
+        $list_tes->select('a.*, b.nama, d.*');
         $list_tes->groupBy('a.id');
         $get_list_tes = $list_tes->get()->getResultArray();
 
@@ -24,7 +26,7 @@ class Ujian extends BaseController {
 		$d['p'] = 'peserta/ujian';
 		$d['js'] = 'ujian_peserta';
 		$d['title'] = 'Daftar Test';
-		return view('template_peserta', $d);
+		return view('template_admin', $d);
 	}
 
 	/*
@@ -243,7 +245,7 @@ class Ujian extends BaseController {
 		$d['aspek_c'] = $this->aspek_jenis_c;
 
 
-		return view('template_peserta', $d);
+		return view('template_admin', $d);
 	}
 
 	public function cetak_1($id_ujian) {

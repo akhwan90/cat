@@ -22,7 +22,7 @@ class Captcha
 	{
 		// on génère un code
 		if(!isset($_SESSION[CAPTCHA_SESSION_VAR]) || $_SESSION[CAPTCHA_SESSION_VAR]===NULL)
-			$_SESSION[CAPTCHA_SESSION_VAR] = rand(1000000,9999999);
+			$_SESSION[CAPTCHA_SESSION_VAR] = rand(1000,9999);
 
 		// ***********************************************
 		// ***********************************************
@@ -53,7 +53,7 @@ class Captcha
 		ob_start();
 		imagepng($_img);
 		$img64 = base64_encode(ob_get_clean());
-		return '<img src="data:image/png;base64,'.$img64.'" />';
+		return '<img class="captcha" src="data:image/png;base64,'.$img64.'" />';
 	}
 	
 	static public function check($str)

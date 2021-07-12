@@ -47,8 +47,8 @@ class Dashboard extends BaseController {
 	            ]);
 			} else {
 				$id = session('id');
-				$builder = $this->db->table('admins');
-	            $data['password'] = password_hash($p['p3'], PASSWORD_DEFAULT);
+				$builder = $this->db->table('m_admin');
+	            $data['password'] = md5($p['p3']);
 				$builder->where('id', $id);
 				$queri = $builder->update($data);
 

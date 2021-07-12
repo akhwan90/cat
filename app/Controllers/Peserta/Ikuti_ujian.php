@@ -15,311 +15,156 @@ class Ikuti_ujian extends BaseController {
 
 	public function ok($id_ujian) {
 		// cek sudah waktunya belum / sudah kedaluarsa 
-
-		$cek_waktu_ujian = $this->db->table('m_ujian');
-		$cek_waktu_ujian->where('id', $id_ujian);
-		$cek_waktu_ujian->select('*');
+		$cek_waktu_ujian = $this->db->table('tr_ikut_ujian a');
+		$cek_waktu_ujian->join('tr_guru_tes b', 'a.id_tes = b.id');
+		$cek_waktu_ujian->join('m_siswa c', 'a.id_user = c.id');
+		$cek_waktu_ujian->join('m_admin d', "d.kon_id = a.id_user AND d.level = 'siswa'");
+		$cek_waktu_ujian->where('a.id_tes', $id_ujian);
+		$cek_waktu_ujian->where('a.id_user', session('kon_id'));
+		$cek_waktu_ujian->select('a.*, b.*, c.*');
 		$get_cek_waktu_ujian = $cek_waktu_ujian->get()->getRowArray();
 
 		if (empty($get_cek_waktu_ujian)) {
-			return redirect()->to(base_url('peserta/ujian?dari=ok1'));
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Tidak terdaftar</div>');
 		}
 
-		if (strtotime('now') < strtotime($get_cek_waktu_ujian['waktu_mulai']) || strtotime('now') > strtotime($get_cek_waktu_ujian['waktu_selesai'])) {
-			return redirect()->to(base_url('peserta/ujian?dari=ok2'));
+		if (strtotime('now') < strtotime($get_cek_waktu_ujian['tgl_mulai']) || strtotime('now') > strtotime($get_cek_waktu_ujian['terlambat'])) {
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Sudah selesai</div>');
 		}
 
-		// cek status sudah selesai ujian 
-		$cek_waktu_ujian = $this->db->table('hasil_rekomendasi');
-		$cek_waktu_ujian->where('id_ujian', $id_ujian);
-		$cek_waktu_ujian->where('id_peserta', session('peserta_id'));
-		$cek_waktu_ujian->select('is_selesai');
-		$get_cek_status_ujian = $cek_waktu_ujian->get()->getRow();
+		if ($get_cek_waktu_ujian['status'] == "Y") {
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Sudah selesai mengerjakan</div>');
+		}
 
-		if (!empty($get_cek_status_ujian)) {
-			if ($get_cek_status_ujian->is_selesai > 0) {
-				return redirect()->to(base_url('peserta/ujian?dari=ok3'));
+
+
+		if ($get_cek_waktu_ujian['status'] == 'N') {
+			// generate soal
+			$jenis_acakan = $get_cek_waktu_ujian['jenis'];
+			$get_lama_pengerjaan = $get_cek_waktu_ujian['waktu'];
+			
+			$builder = $this->db->table('tr_guru_tes_soal a');
+			$builder->where('a.id_guru_tes', $id_ujian);
+			if ($jenis_acakan == "acak") {
+				$builder->orderBy('RAND()');
+			} else {
+				$builder->orderBy('a.urutan', 'asc');
 			}
-		}
+			$builder->join('m_soal b', 'a.id_soal = b.id');
+			$builder->select('a.*, b.jawaban');
+			$get_soal = $builder->get()->getResultArray();
+
+			$tampung_soal = [];
+			$list_soal = [];
+			if (!empty($get_soal)) {
+				foreach ($get_soal as $soal) {
+					$kei = $soal['id_soal'];
+					$p_satu_soal = [
+						'id_soal'=>$soal['id_soal'],
+						'kunci'=>$soal['jawaban'],
+						'jawaban'=>'',
+					];
+					$tampung_soal[$kei] = $p_satu_soal;
+					$list_soal[] = $soal['id_soal'];
+				}
+			}
 
 
-		// cek sudah ada belum 		
-		$b0 = $this->db->table('m_ujian_peserta');
-		$b0->where('id_ujian', $id_ujian);
-		$b0->where('id_peserta', session('peserta_id'));
-		$b0->select('id');
-		$get_sdh_ujian = $b0->countAllResults();
+			$waktu_sekarang = date('Y-m-d H:i:s');
+			$waktu_harus_selesai = date('Y-m-d H:i:s', strtotime($waktu_sekarang) + ($get_lama_pengerjaan * 60));
 
+			$this->db->table('tr_ikut_ujian')
+			->where('id_tes', $id_ujian)
+			->where('id_user', session('kon_id'))
+			->update([
+				'list_jawaban'=>json_encode($tampung_soal),
+				'list_soal'=>json_encode($list_soal),
+				'tgl_mulai'=>$waktu_sekarang,
+				'tgl_selesai'=>$waktu_harus_selesai,
+				'status'=>'D',
+			]);
+
+		} 
+
+		// echo $this->db->getLastQuery();
+		return redirect()->to(base_url('peserta/ikuti_ujian/kerjakan/'.$id_ujian));
+	}
+
+	public function kerjakan($id_ujian) {
 		// get detil peserta 
-		$detil_peserta = $this->db->table('m_peserta');
-		$detil_peserta->where('id', session('peserta_id'));
-		$detil_peserta->select('*');
+		$detil_peserta = $this->db->table('tr_ikut_ujian a');
+		$detil_peserta->join('tr_guru_tes b', 'a.id_tes = b.id');
+		$detil_peserta->join('m_siswa c', 'a.id_user = c.id');
+		$detil_peserta->join('m_admin d', "d.kon_id = a.id_user AND d.level = 'siswa'");
+		$detil_peserta->where('a.id_tes', $id_ujian);
+		$detil_peserta->where('a.id_user', session('kon_id'));
+		$detil_peserta->select('a.*, b.*, c.*');
 		$get_detil_peserta = $detil_peserta->get()->getRowArray();
 
-		if (!empty($get_detil_peserta)) {
-			$jenis_tes = $get_detil_peserta['jenis_tes'];
-			$jenis_staff = $get_detil_peserta['jenis_staff'];
-			$level_test = $get_detil_peserta['level_test'];
+		// jika data peserta tidak ditemukan
+		if (empty($get_detil_peserta)) {
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Tidak terdaftar</div>');
+		}
 
-			$tes_boleh_diikuti = $this->sistem_seleksi[$jenis_tes]['sub'][$jenis_staff]['tes_diikuti'];
+		// jika waktu melebihi atau kurang
+		if (strtotime('now') < strtotime($get_detil_peserta['tgl_mulai']) || strtotime('now') > strtotime($get_detil_peserta['terlambat'])) {
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Sudah selesai</div>');
+		}
+
+		if ($get_detil_peserta['status'] == "Y") {
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Sudah selesai mengerjakan</div>');
+		}
+
+		$list_soal = $get_detil_peserta['list_soal'];
+		$list_soal_array = json_decode($get_detil_peserta['list_soal'], true);
+		$list_jawaban_array = json_decode($get_detil_peserta['list_jawaban'], true);
+
+		// jika list soal tidak ditemukan
+		if (empty($list_soal_array)) {
+			return redirect()->to(base_url('peserta/ujian'))->with('error', '<div class="alert alert-danger">Daftar soal kosong..</div>');
+		}
 
 
-			if ($get_sdh_ujian < 1) {
-				// insert ke tabel ikut ujian dulu..
-				$jenis_bagian = $this->jenis_soal;
+		$q_get_soal = $this->db->table('m_soal')
+		->whereIn('id', $list_soal_array)
+		->orderBy('FIELD (id,'.implode(",", $list_soal_array).')')
+		->get()->getResultArray();
+		// ->getCompiledSelect();
 
-				// $tampung_soal = [];
-				foreach ($jenis_bagian as $jbk => $jbv) {
+		$list_soals = [];
+		if (!empty($q_get_soal)) {
+			foreach ($q_get_soal as $soal) {
+				$idx = $soal['id'];
+				$soal['jawaban_peserta'] = $list_jawaban_array[$idx]['jawaban'];
+				$list_soals[] = $soal;
+			}
+		}
 
-					$jenis = $jbv['jenis'];
-					$bagian = $jbv['bagian'];
+		$waktu_sekarang = new \DateTime(date('Y-m-d H:i:s'));
+		$waktu_harus_selesai = new \DateTime($get_detil_peserta['tgl_selesai']);
 
-					if (in_array($jenis, $tes_boleh_diikuti)) {
-						$max_jml_soal = $this->jenis_soal[$jenis.$bagian]['jml_soal'];
+		$diff = date_diff($waktu_harus_selesai,$waktu_sekarang);
 
-						$ba1 = $this->db->table('m_soal');
-						$ba1->where('jenis', $jenis);
-						$ba1->where('bagian', $bagian);
-						$ba1->orderBy('id');
-						$ba1->select('id, kunci, favorable');
-						$ba1->limit($max_jml_soal);
-						$get_ba1 = $ba1->get()->getResultArray();
-
-						// $tampung_soal[$jenis][$bagian] = [];
-						$soal_jenis_bagian = [];
-						$no_soal = 1;
-						foreach ($get_ba1 as $soal) {
-							// $idx_jenis_bagian = $soal['id'];
-							$idx_jenis_bagian = $no_soal;
-							
-							if ($jenis == "E" && $bagian == 1) {
-								$kunci = $soal['favorable'];
-								$jawaban = "";
-							} else {
-								$kunci = json_decode($soal['kunci'], true);
-								$jawaban = [];
-							}
-
-							$soal_jenis_bagian[$idx_jenis_bagian] = [
-								'soal_id'=>$soal['id'],
-								'kunci'=>$kunci,
-								'jawaban'=>$jawaban,
-								'status'=>0,
-							];
-
-							$no_soal++;
-						}
-
-						$input_ujian_peserta = [
-							'id_ujian'=>$id_ujian,
-							'id_peserta'=>session('peserta_id'),
-							'jenis'=>$jenis,
-							'bagian'=>$bagian,
-							'detil'=>json_encode($soal_jenis_bagian),
-							'jml_benar'=>0,
-							'jml_salah'=>0,
-						];
-
-						$ba2 = $this->db->table('m_ujian_peserta');
-						$ba2->insert($input_ujian_peserta);
-					}
-				}
-
-				// simpan ke tabel rekomendasi
-				$p_save_rekomendasi = [
-					'id_peserta'=>session('peserta_id'),
-					'id_ujian'=>$id_ujian,
-					'rekomendasi'=>0,
-					'nilai'=>0,
-					'notes'=>'',
-					'is_selesai'=>0,
-				];
-
-				$builder = $this->db->table('hasil_rekomendasi');
-				$queri = $builder->insert($p_save_rekomendasi);
-			} 
-
-			return redirect()->to(base_url('peserta/ikuti_ujian/baca_petunjuk/'.$id_ujian.'/A/1'));
+		if ($diff->invert < 1) {
+			$d['sisa_waktu'] = 0;
 		} else {
-			exit('peserta tidak ditemukan');
+			$d['sisa_waktu'] = (($diff->h * 60 * 60) + ($diff->i * 60) + $diff->s);
 		}
-	}
+		$d['list_soal'] = $list_soals;
+		$d['huruf_opsi'] = $this->opsi_huruf;
 
-	public function baca_petunjuk($id_ujian, $jenis, $bagian) {
-		// cek sudah waktunya belum / sudah kedaluarsa 
+		// echo json_encode($list_soals);
+		// exit;
 
-		$cek_waktu_ujian = $this->db->table('m_ujian');
-		$cek_waktu_ujian->where('id', $id_ujian);
-		$cek_waktu_ujian->select('*');
-		$get_cek_waktu_ujian = $cek_waktu_ujian->get()->getRowArray();
-
-		if (empty($get_cek_waktu_ujian)) {
-			return redirect()->to(base_url('peserta/ujian?dari=baca_petunjuk1'));
-		}
-
-		if (strtotime('now') < strtotime($get_cek_waktu_ujian['waktu_mulai']) || strtotime('now') > strtotime($get_cek_waktu_ujian['waktu_selesai'])) {
-			return redirect()->to(base_url('peserta/ujian?dari=baca_petunjuk2'));
-		}
-
-		// cek status sudah selesai ujian 
-		$cek_waktu_ujian = $this->db->table('hasil_rekomendasi');
-		$cek_waktu_ujian->where('id_ujian', $id_ujian);
-		$cek_waktu_ujian->where('id_peserta', session('peserta_id'));
-		$cek_waktu_ujian->select('is_selesai');
-		$get_cek_status_ujian = $cek_waktu_ujian->get()->getRow()->is_selesai;
-
-		if ($get_cek_status_ujian > 0) {
-			return redirect()->to(base_url('peserta/ujian?dari=baca_petunjuk3'));
-		}
-
-		
-
-		$d['jenis_bagian_detil'] = $this->jenis_soal[$jenis.$bagian];
-		$d['jenis_bagian_petunjuk'] = $this->text_petunjuk_bagian[$jenis.$bagian];
+		// echo json_encode($d['huruf_opsi']);
+		// exit;
 
 		$d['id_ujian'] = $id_ujian;
-		$d['jenis'] = $jenis;
-		$d['bagian'] = $bagian;
-		
-		$d['p'] = 'peserta/v_soal_petunjuk';
+
+		$d['p'] = 'peserta/v_soal';
 		$d['js'] = 'ujian_peserta_ok';
-		$d['title'] = 'Petunjuk Soal';
+		$d['title'] = 'Soal Ujian';
 		return view('template_ujian', $d);
-	}
-
-	public function ok_tes($id_ujian, $jenis, $bagian) {
-		// cek sudah waktunya belum / sudah kedaluarsa 
-
-		$cek_waktu_ujian = $this->db->table('m_ujian');
-		$cek_waktu_ujian->where('id', $id_ujian);
-		$cek_waktu_ujian->select('*');
-		$get_cek_waktu_ujian = $cek_waktu_ujian->get()->getRowArray();
-
-		if (empty($get_cek_waktu_ujian)) {
-			return redirect()->to(base_url('peserta/ujian?dari=ok_tes1'));
-		}
-
-		if (strtotime('now') < strtotime($get_cek_waktu_ujian['waktu_mulai']) || strtotime('now') > strtotime($get_cek_waktu_ujian['waktu_selesai'])) {
-			return redirect()->to(base_url('peserta/ujian?dari=ok_tes2'));
-		}
-
-		// cek status sudah selesai ujian 
-		$cek_waktu_ujian = $this->db->table('hasil_rekomendasi');
-		$cek_waktu_ujian->where('id_ujian', $id_ujian);
-		$cek_waktu_ujian->where('id_peserta', session('peserta_id'));
-		$cek_waktu_ujian->select('is_selesai');
-		$get_cek_status_ujian = $cek_waktu_ujian->get()->getRow()->is_selesai;
-
-		if ($get_cek_status_ujian > 0) {
-			return redirect()->to(base_url('peserta/ujian?dari=ok_tes3'));
-		}
-
-
-		// $jatah_waktu_mengerjakan = 20 * 60; // 60 menit
-		$jatah_waktu_mengerjakan = $this->jenis_soal[$jenis.$bagian]['waktu']; // 60 menit
-
-		// list semua bagian soal		
-		// $d['jenis_bagian'] = $this->jenis_soal;
-		$d['huruf_opsi'] = $this->huruf_opsi;
-		$d['jenis_bagian_detil'] = $this->jenis_soal[$jenis.$bagian];
-		$d['jenis_bagian_petunjuk'] = $this->text_petunjuk_bagian[$jenis.$bagian];
-
-		// get list bagian 
-		$id_peserta = session('peserta_id');
-		// $data_list_jenis_ujian = $this->db->table('m_ujian_peserta');
-		// $data_list_jenis_ujian->where('id_ujian', $id_ujian);
-		// $data_list_jenis_ujian->where('id_peserta', $id_peserta);
-		// $data_list_jenis_ujian->select('jenis, bagian');
-		// $data_list_jenis_ujian->orderBy('jenis', 'ASC');
-		// $get_data_list_jenis_ujian = $data_list_jenis_ujian->get()->getResultArray();
-		// $d['jenis_bagian'] = $get_data_list_jenis_ujian;
-
-		// cek sudah mengerjakan sebelumnya ?
-		$cek_sudah_mengerjakan_sebelumnya = $this->db->table('m_ujian_peserta');
-		$cek_sudah_mengerjakan_sebelumnya->where('id_ujian', $id_ujian);
-		$cek_sudah_mengerjakan_sebelumnya->where('id_peserta', $id_peserta);
-		$cek_sudah_mengerjakan_sebelumnya->where('jenis', $jenis);
-		$cek_sudah_mengerjakan_sebelumnya->where('bagian', $bagian);
-		$cek_sudah_mengerjakan_sebelumnya->select('is_sdh_mengerjakan');
-		$get_cek_sudah_mengerjakan_sebelumnya = $cek_sudah_mengerjakan_sebelumnya->get()->getRowArray();
-
-		if ($get_cek_sudah_mengerjakan_sebelumnya['is_sdh_mengerjakan'] == 0) {	
-			$waktu_sekarang = date('Y-m-d H:i:s');
-			$waktu_harus_selesai = date('Y-m-d H:i:s', strtotime($waktu_sekarang) + $this->jenis_soal[$jenis.$bagian]['waktu']);
-			// $waktu_harus_selesai = date($waktu_sekarang, time() + $this->jenis_soal[$jenis.$bagian]['waktu']);	
-
-			// update status dan waktu mulai 		
-			$update_status_ujian_per_bagian = $this->db->table('m_ujian_peserta');
-			$update_status_ujian_per_bagian->where('id_ujian', $id_ujian);
-			$update_status_ujian_per_bagian->where('id_peserta', $id_peserta);
-			$update_status_ujian_per_bagian->where('jenis', $jenis);
-			$update_status_ujian_per_bagian->where('bagian', $bagian);
-			$get_update_status_ujian_per_bagian = $update_status_ujian_per_bagian->update([
-				'is_sdh_mengerjakan'=>1,
-				'waktu_mulai'=>$waktu_sekarang,
-				'last_activity'=>$waktu_sekarang,
-				'waktu_harus_selesai'=>$waktu_harus_selesai
-			]);
-		}
-
-		// get waktu berjalan
-		$waktu_berjalan = $this->db->table('m_ujian_peserta');
-		$waktu_berjalan->where('id_ujian', $id_ujian);
-		$waktu_berjalan->where('id_peserta', $id_peserta);
-		$waktu_berjalan->where('jenis', $jenis);
-		$waktu_berjalan->where('bagian', $bagian);
-		$waktu_berjalan->select('waktu_mulai, waktu_harus_selesai, last_activity');
-		$get_waktu_berjalan = $waktu_berjalan->get()->getRowArray();
-
-		$waktu_mulai = $get_waktu_berjalan['waktu_mulai'];
-		$waktu_harus_selesai = $get_waktu_berjalan['waktu_harus_selesai'];
-		$sisa_waktu_asli = strtotime($waktu_harus_selesai) - strtotime(date('Y-m-d H:i:s'));
-
-
-		$d['sisa_waktu'] = $sisa_waktu_asli;
-
-		// cek sudah ada tes..?
-		$id_peserta = session('peserta_id');
-		$db1 = $this->db->table('m_ujian_peserta');
-		$db1->where('id_ujian', $id_ujian);
-		$db1->where('id_peserta', $id_peserta);
-		$db1->where('jenis', $jenis);
-		$db1->where('bagian', $bagian);
-		$data_ujian = $db1->get()->getRowArray();
-
-		if (!empty($data_ujian)) {
-			$list_soal = json_decode($data_ujian['detil'], true);
-			$list_id_soal = [];
-			if (!empty($list_soal)) {
-				foreach ($list_soal as $lss) {
-					$list_id_soal[] = $lss['soal_id'];
-				}
-			}
-
-			$q_get_soal = $this->db->query("SELECT * FROM m_soal WHERE id IN ? ORDER BY FIELD (id,".implode(",", $list_id_soal).")", [$list_id_soal])->getResultArray();
-			$d['list_soal'] = $q_get_soal;
-
-			$d['id_ujian'] = $id_ujian;
-			$d['jenis'] = $jenis;
-			$d['bagian'] = $bagian;
-			$d['is_checkbox'] = 0;
-
-			if (($jenis.$bagian) == "A2") {
-				$d['is_checkbox'] = 1;
-			}
-
-			$d['jawaban_terisi'] = $list_soal;
-
-			// echo json_encode($d['jawaban_terisi']);
-			// exit;
-
-			$d['p'] = 'peserta/v_soal';
-			$d['js'] = 'ujian_peserta_ok';
-			$d['title'] = 'Soal Ujian';
-			return view('template_ujian', $d);
-		} else {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-        }
 
 	}
 

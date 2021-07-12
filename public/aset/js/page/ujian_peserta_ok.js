@@ -15,7 +15,7 @@ function load_detikan() {
 		$(this).html(event.strftime(totalHours + ':%M:%S'));
 	}).on('finish.countdown', function() {
 		// alert('Waktu selesai');
-		selesai_bagian(true);
+		selesai_ujian(true);
     });
 }
 
@@ -35,7 +35,7 @@ function load_navigasi() {
 			background = 'green';
 		}
 
-		text_nav_soal += '<a href="#" id="navigasi_soal_'+(i+1)+'" onclick="return pilih_soal('+i+');" style="padding: 5px 0px; margin-right: 5px; margin-bottom: 5px; width: 35px; background: '+background+'; color: #000; float: left; display: inline; text-align: center">'+no_soal_not_array+'</a> ';
+		text_nav_soal += '<a href="#" id="navigasi_soal_'+(i+1)+'" class="navigasi-soal" onclick="return pilih_soal('+i+');" style="padding: 5px 0px; margin-right: 5px; margin-bottom: 5px; width: 35px; background: '+background+'; color: #000; float: left; display: inline; text-align: center">'+no_soal_not_array+'</a> ';
 		no_soal_not_array++;
 	}
 	$("#nav_soal").html(text_nav_soal);
@@ -78,6 +78,8 @@ function pilih_soal(id_box) {
 	simpan(id_box_new);
 
 	$("#soal_aktif").val(id_box);
+	$(".navigasi-soal").css('box-shadow', 'none');
+	$("#navigasi_soal_"+id_box).css('box-shadow', '2px 2px 4px yellow');
 
 	return false;
 }
@@ -100,6 +102,7 @@ function next() {
 		return false;
 	}
 }
+
 function prev() {
 	let prev_box = $("#tb_prev").attr('data-nomorsoal');
 	prev_box = parseInt(prev_box);
@@ -107,34 +110,13 @@ function prev() {
 
 	pilih_soal(prev_box);
 	return false;
-
 }
 
 function simpan(id_box) {
-	let jenis = $("#jenis").val();
-	let bagian = $("#bagian").val();
 	let id_ujian = $("#id_ujian").val();
-	let is_checkbox = $("#is_checkbox").val();
+	let jwbn = $('input[name="jawaban_'+id_box+'"]:checked').val();
 
-	let jawaban_new = [];
-	let jawaban = [];
-
-	if (is_checkbox == "1") {
-		document.getElementsByName('jawaban_'+id_box).forEach(function(chk){
-			if(chk.checked){
-				jawaban.push(chk.value);
-			}
-		});
-		
-	   	jawaban_new = JSON.stringify(jawaban);
-	} else {
-		let jwbn = $('input[name="jawaban_'+id_box+'"]:checked').val();
-	    jawaban.push(jwbn);
-	   	jawaban_new = JSON.stringify(jawaban);
-	}
-
-
-	let data = {id_box: id_box, jenis: jenis, bagian: bagian, id_ujian: id_ujian, jawaban: jawaban_new};
+	let data = {id_box: id_box, id_ujian: id_ujian, jawaban: jwbn};
 
 	$.ajax({
 	    type: "POST",
@@ -145,8 +127,11 @@ function simpan(id_box) {
 	    },
 	    success: function(r, textStatus, jqXHR) {  
 	    	$('#loading').html('');
-	    	if (jawaban[0] !== undefined) {
-		    	$("#navigasi_soal_"+id_box).css('background', 'green');
+	    	if (r.success) {
+	    		if (r.jawaban != '') {
+			    	$("#navigasi_soal_"+id_box).css('background', 'green');
+			    }
+		    	// $("#navigasi_soal_"+id_box).css('border-color', 'yellow');
 		    }
 	    	// console.log(r.message);
 	    },
@@ -159,112 +144,11 @@ function simpan(id_box) {
 	return false;
 }
 
-
-function selesai_bagian(is_dari_waktu_habis=false) {
-	if (!is_dari_waktu_habis) {
-		if (confirm('Anda sudah sampai pada soal terakhir bagian ini. Apakah Anda akan mengakhiri bagian ini..?')) {
-			let jenis = $("#jenis").val();
-			let bagian = $("#bagian").val();
-			let id_ujian = $("#id_ujian").val();
-			
-			let data = {jenis: jenis, bagian: bagian, id_ujian: id_ujian};
-
-			$.ajax({
-			    type: "POST",
-			    data: data,
-			    url: base_url + "/peserta/hitung_hasil/selesai_bagian",
-			    beforeSend: function(){
-			    	$('#loading').html('<div style="background: #333; color: #fff; width: 100%; height: 100%">Loading...</div>');
-			    },
-			    success: function(r, textStatus, jqXHR) {  
-			    	$('#loading').html('');
-			    	// $('#loading').html('<div style="background: #333; color: #fff; width: 100%; height: 200px">'+r.message+'</div>');
-			    	// console.log(r.message);
-			    	// alert(r.message);
-			    	if (r.is_selesai_bagian == true) {
-				    	if (r.is_selesai_ujian == true) {
-					    	// alert('ujian selesai');
-					    	selesai_ujian();
-					    } else {
-					    	window.open(base_url + "/peserta/ikuti_ujian/baca_petunjuk/" + id_ujian + '/' + r.next.jenis + '/' + r.next.bagian, "_self");
-				    	}
-				    }	 
-
-			    },
-			    error: function(xhr) {
-			    	$('#loading').html('');
-			        console.log(xhr)
-			    }
-			});
-			
-			return false;
-		}
-	} else {
-		alert('Waktu mengerjakan ujian sudah habis...!');
-
-		let jenis = $("#jenis").val();
-		let bagian = $("#bagian").val();
-		let id_ujian = $("#id_ujian").val();
-		
-		let data = {jenis: jenis, bagian: bagian, id_ujian: id_ujian};
-
-		$.ajax({
-		    type: "POST",
-		    data: data,
-		    url: base_url + "/peserta/hitung_hasil/selesai_bagian",
-		    beforeSend: function(){
-		    	$('#loading').html('<div style="background: #333; color: #fff; width: 100%; height: 100%">Loading...</div>');
-		    },
-		    success: function(r, textStatus, jqXHR) {  
-		    	$('#loading').html('');
-		    	// $('#loading').html('<div style="background: #333; color: #fff; width: 100%; height: 200px">'+r.message+'</div>');
-		    	// console.log(r.message);
-		    	// alert(r.message);
-		    	if (r.is_selesai_bagian == true) {
-			    	if (r.is_selesai_ujian == true) {
-				    	// alert('ujian selesai');
-				    	selesai_ujian();
-				    } else {
-				    	window.open(base_url + "/peserta/ikuti_ujian/baca_petunjuk/" + id_ujian + '/' + r.next.jenis + '/' + r.next.bagian, "_self");
-			    	}
-			    }	 
-
-		    },
-		    error: function(xhr) {
-		    	$('#loading').html('');
-		        console.log(xhr)
-		    }
-		});
-		
-		return false;
-	}
-}
-
-
 function selesai_ujian() {
-	let jenis = $("#jenis").val();
-	let bagian = $("#bagian").val();
-	let id_ujian = $("#id_ujian").val();
-	
-	let data = {jenis: jenis, bagian: bagian, id_ujian: id_ujian};
-
-	$.ajax({
-	    type: "POST",
-	    data: data,
-	    url: base_url + "/peserta/hitung_hasil/selesai_ujian",
-	    beforeSend: function(){
-	    	$('#loading').html('<div style="background: #333; color: #fff; width: 100%; height: 100%">Loading...</div>');
-	    },
-	    success: function(r, textStatus, jqXHR) {  
-	    	$('#loading').html('');
-	    	alert(r.message);
-		    window.open(base_url + "/peserta", "_self");
-	    },
-	    error: function(xhr) {
-	    	$('#loading').html('');
-	        console.log(xhr)
-	    }
-	});
-	
-	return false;
+	if (confirm('Anda sudah sampai pada soal terakhir. Apakah Anda akan mengakhiri ujian ini..?')) {
+		let id_ujian = $("#id_ujian").val();
+		id_ujian = parseInt(id_ujian);
+		
+    	window.open(base_url + "/peserta/hitung_hasil/selesai/" + id_ujian, "_self");
+    }
 }

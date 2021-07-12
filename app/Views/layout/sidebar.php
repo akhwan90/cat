@@ -4,7 +4,7 @@
 			<li class="nav-title">Menu Admin</li>
 
 			<li class="nav-item open">
-				<a class="nav-link" href="<?=base_url('admin/dashboard');?>">
+				<a class="nav-link" href="<?=base_url('admin');?>">
 					<i class="nav-icon icon-speedometer"></i> Dashboard
 				</a>
 			</li>
@@ -27,6 +27,11 @@
 					<i class="nav-icon fa fa-book"></i> Mata Pelajaran
 				</a>
 			</li>
+			<li class="nav-item open">
+				<a class="nav-link" href="<?=base_url('admin/instansi');?>">
+					<i class="nav-icon fa fa-home"></i> Instansi Pengguna
+				</a>
+			</li>
 		<?php } else if (session('level') == "guru") { ?>
 			<li class="nav-item open">
 				<a class="nav-link" href="<?=base_url('admin/ujian');?>">
@@ -42,11 +47,6 @@
 			<li class="nav-item open">
 				<a class="nav-link" href="<?=base_url('peserta/ujian');?>">
 					<i class="nav-icon fa fa-edit"></i> Ujian
-				</a>
-			</li>
-			<li class="nav-item open">
-				<a class="nav-link" href="<?=base_url('peserta/ujian_history');?>">
-					<i class="nav-icon fa fa-file"></i> History Ujian
 				</a>
 			</li>
 		<?php } ?>

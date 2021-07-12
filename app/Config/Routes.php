@@ -33,17 +33,13 @@ $routes->setAutoRoute(false);
 // route since we don't have to scan directories.
 $routes->get('/', 'Landing::index');
 
-$routes->get('/admin/auth', 'Auth::index', ['filter'=>'auto_login']);
+$routes->get('/admin/auth', 'Auth::index');
 $routes->post('/admin/auth/login', 'Auth::login');
 $routes->get('/admin/logout', 'Auth::logout');
 
-$routes->get('/peserta/auth', 'Peserta\Auth::index');
-$routes->post('/peserta/auth/login', 'Peserta\Auth::login');
-$routes->get('/peserta/logout', 'Peserta\Auth::logout');
-
 $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 
-    $routes->add('dashboard', 'Admin\Dashboard::index');
+    $routes->get('', 'Admin\Dashboard::index');
     $routes->get('ubah_password', 'Admin\Dashboard::ubah_password');
     $routes->post('ubah_password', 'Admin\Dashboard::ubah_password_ok');
 
@@ -106,13 +102,9 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 	    $routes->get('setting/(:num)/detil_peserta', 'Admin\Ujian_setting::detil_peserta/$1');
 	    $routes->get('setting/(:num)/hapus_peserta/(:num)', 'Admin\Ujian_setting::hapus_peserta/$1/$2');
 	    $routes->post('setting/(:num)/simpan_ujian_peserta', 'Admin\Ujian_setting::simpan_ujian_peserta/$1');
+	    $routes->get('setting/(:num)/hasil_peserta/(:num)', 'Admin\Ujian_setting::hasil_peserta/$1/$2');
+	    $routes->get('setting/(:num)/cetak_hasil', 'Admin\Ujian_setting::cetak_hasil/$1');
 	    // $routes->get('get_detil_soal/(:num)', 'Admin\Ujian_setting::detil_soal/$1');
-    });
-
-    $routes->group('jenis_ujian', function($routes) {	
-	    $routes->get('', 'Admin\Jenis_ujian::index');
-	    $routes->get('edit/(:num)', 'Admin\Jenis_ujian::edit/$1');
-	    $routes->post('simpan', 'Admin\Jenis_ujian::simpan');
     });
 
     $routes->group('soal', function($routes) {	
@@ -127,61 +119,13 @@ $routes->group('/admin', ['filter'=>'cek_login'], function($routes) {
 	    $routes->post('hapus', 'Admin\Soal::hapus');
     });
 
-    /*
-    $routes->group('ujian', function($routes) {	
-	    $routes->get('', 'Admin\Ujian::index');
-	    $routes->get('lihat_hasil/(:num)', 'Admin\Ujian::lihat_hasil/$1');
-	    $routes->get('lihat_hasil_detil/(:num)/(:num)', 'Admin\Ujian::lihat_hasil_detil/$1/$2');
-	    $routes->post('datatabel', 'Admin\Ujian::datatabel');
-	    $routes->post('detil', 'Admin\Ujian::detil');
-	    $routes->post('simpan', 'Admin\Ujian::simpan');
-	    $routes->post('hapus', 'Admin\Ujian::hapus');
-
-	    
-	    $routes->get('cetak_hasil_seleksi_non_staff/(:num)/(:num)', 'Admin\Ujian::cetak_hasil_seleksi_non_staff/$1/$2');
-	    $routes->get('cetak_hasil_seleksi_staff/(:num)/(:num)', 'Admin\Ujian::cetak_hasil_seleksi_staff/$1/$2');
-	    $routes->get('cetak_hasil_assesment/(:num)/(:num)', 'Admin\Ujian::cetak_hasil_assesment/$1/$2');
-
-	    // minjem controller peserta
-	    $routes->get('selesai/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::selesai_from_url/$1/$2');
-	    $routes->get('peserta/(:num)', 'Admin\Ujian::peserta/$1');
-	    $routes->get('peserta_tambah/(:num)', 'Admin\Ujian::peserta_tambah/$1');
-	    $routes->get('peserta_hapus/(:num)/(:num)', 'Admin\Ujian::peserta_hapus/$1/$2');
-	    $routes->post('peserta_tambah_simpan', 'Admin\Ujian::peserta_tambah_simpan');
-
-	    // batalkan ujian
-	    $routes->get('batalkan/(:num)/(:num)', 'Admin\Ujian::batalkan/$1/$2');
-	    $routes->get('lihat_jawaban/(:num)/(:num)', 'Admin\Ujian::lihat_jawaban/$1/$2');
-	    $routes->get('lihat_jawaban_mendatar/(:num)/(:num)', 'Admin\Ujian::lihat_jawaban_mendatar/$1/$2');
-
-	    // ujicoba fungsi 
-	    $routes->get('ujicoba/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::tes_hasil_akhir/$1/$2');
-
-	    // detil per aspek
-	    $routes->get('ujicoba_hitung_a/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::ujicoba_hitung_a/$1/$2');
-	    $routes->get('ujicoba_hitung_b/(:num)/(:num)', 'Peserta\Hitung_hasil_ujian::ujicoba_hitung_b/$1/$2');
-    });
-    */
-
-    $routes->group('admin', function($routes) {	
-	    $routes->get('', 'Admin\Admin::index');
-	    $routes->post('datatabel', 'Admin\Admin::datatabel');
-	    $routes->post('detil', 'Admin\Admin::detil');
-	    $routes->post('simpan', 'Admin\Admin::simpan');
-	    $routes->post('hapus', 'Admin\Admin::hapus');
-	    $routes->get('aktifkan_user', 'Admin\Admin::aktifkan_user');
-	    $routes->get('reset_password/(:num)', 'Admin\Admin::reset_password/$1');
-	    $routes->get('form_import', 'Admin\Admin::form_import');
-	    $routes->post('import_ok', 'Admin\Admin::import_ok');
-	    $routes->post('kirim_email', 'Admin\Admin::kirim_email');
+    $routes->group('instansi', function($routes) {	
+	    $routes->get('', 'Admin\Instansi::index');
+	    $routes->get('edit', 'Admin\Instansi::edit');
+	    $routes->post('save', 'Admin\Instansi::save');
     });
 
-    $routes->group('email', function($routes) {	
-	    $routes->get('', 'Admin\Email::index');
-	    $routes->post('save', 'Admin\Email::save');
-    });
 
-    $routes->get('coba3', 'Peserta\Ikuti_ujian::index');
 });
 
 $routes->group('/peserta', ['filter'=>'cek_login'], function($routes) {
@@ -197,18 +141,12 @@ $routes->group('/peserta', ['filter'=>'cek_login'], function($routes) {
 
     $routes->group('ikuti_ujian', function($routes) {	
 	    $routes->get('ok/(:num)', 'Peserta\Ikuti_ujian::ok/$1');
-	    $routes->get('baca_petunjuk/(:num)/(:alpha)/(:num)', 'Peserta\Ikuti_ujian::baca_petunjuk/$1/$2/$3');
-	    $routes->get('ok_tes/(:num)/(:alpha)/(:num)', 'Peserta\Ikuti_ujian::ok_tes/$1/$2/$3');
+	    $routes->get('kerjakan/(:num)', 'Peserta\Ikuti_ujian::kerjakan/$1');
     });
 
     $routes->group('hitung_hasil', function($routes) {	
-	    $routes->get('ok_1/(:num)/(:alpha)/(:num)', 'Peserta\Hitung_hasil_ujian::hitung_intelegence/$1/$2/$3');
-	    $routes->get('ok_2/(:num)/(:alpha)/(:num)', 'Peserta\Hitung_hasil_ujian::hitung_personality/$1/$2/$3');
 	    $routes->post('hitung_satu', 'Peserta\Hitung_hasil_ujian::hitung_satu');
-	    $routes->post('selesai', 'Peserta\Hitung_hasil_ujian::selesai');
-	    $routes->post('selesai_bagian', 'Peserta\Hitung_hasil_ujian::selesai_bagian');
-	    $routes->post('selesai_ujian', 'Peserta\Hitung_hasil_ujian::selesai_ujian');
-
+	    $routes->get('selesai/(:num)', 'Peserta\Hitung_hasil_ujian::selesai/$1');
     });
 });
 

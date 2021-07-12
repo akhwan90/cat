@@ -63,10 +63,18 @@ class Ujian extends BaseController {
             
             foreach ($q_datanya as $d) {
                 $data_ok = array();
-            
-                $link = '<div class="btn-group">
-                <a href="#" onclick="return edit('.$d['id'].');" class="btn btn-success" title="Edit Data"><i class="fa fa-edit"></i> </a>
-                <a href="#" onclick="return hapus('.$d['id'].');" class="btn btn-danger" title="Hapus Data"><i class="fa fa-times"></i> </a>';
+            	
+            	$link = '<div class="btn-group">';
+            	if (strtotime('now') < strtotime($d['tgl_mulai'])) {
+					$link .= '
+							<a href="#" onclick="return edit('.$d['id'].');" class="btn btn-success" title="Edit Data"><i class="fa fa-edit"></i> </a>
+			                <a href="#" onclick="return hapus('.$d['id'].');" class="btn btn-danger" title="Hapus Data"><i class="fa fa-times"></i> </a>';
+				} else if (strtotime('now') > strtotime($d['terlambat'])) {
+					$link .= '';
+				} else {
+					$link .= '';
+				}
+
                 $link .= '</div>';
 
                 $link .= ' <a href="'.base_url('/admin/ujian/setting/'.$d['id']).'" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Detil</a>';

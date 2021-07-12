@@ -128,3 +128,10 @@ nb-configuration.xml
 
 public/uploads/temp/*
 !public/uploads/temp/index.html
+public/uploads/logo/*
+!public/uploads/logo/index.html
+public/uploads/gambar_opsi/*
+!public/uploads/gambar_opsi/index.html
+public/uploads/gambar_soal/*
+!public/uploads/gambar_soal/index.html
+!public/uploads/index.html

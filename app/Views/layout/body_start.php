@@ -1,1 +1,1 @@
-<body class="flex-row align-items-center" style="background: url(https://images.unsplash.com/photo-1538333069437-b7debc325755?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1051&q=80); background-repeat: no-repeat; background-size: 100% 105%; ">
+<body class="flex-row align-items-center" style="background: url(https://images.unsplash.com/photo-1547394765-185e1e68f34e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80); background-repeat: no-repeat; background-size: 100% 105%; ">

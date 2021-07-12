@@ -65,6 +65,11 @@
         min-height: 500px;
     }
 
+    .captcha {
+    	border-top-left-radius: 5px;
+    	border-bottom-left-radius: 5px;
+    }
+
     </style>
 
     <script type="text/javascript">

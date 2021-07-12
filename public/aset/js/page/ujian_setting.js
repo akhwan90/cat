@@ -181,17 +181,42 @@ function load_peserta(id_ujian) {
 	    				'<thead><tr>'+
 	    				'<th width="5%" class="text-center">No</th>'+
 	    				// '<input type="checkbox" name="pilih_semua" id="pilih_semua"></th>'+
-	    				'<th width="20%">NIM</th>'+
-	    				'<th width="70%">Nama</th>'+
-	    				'<th width="5%">Hapus</th>'+
+	    				'<th width="15%">NIS</th>'+
+	    				'<th width="30%">Nama</th>'+
+	    				'<th width="10%">Nilai</th>'+
+	    				'<th width="20%">Status</th>'+
+	    				'<th width="20%">Hapus</th>'+
 	    				'</tr></thead><tbody>';
 	    	let no = 1;
 	    	$.each( r.peserta, function( key, val ) {
+	    		let nilai = parseFloat(val.nilai);
+
 	    		htm += '<tr><td class="text-center">'+no+'</td>'+
 	    				'<td>'+val.nim+'</td>'+
 	    				'<td>'+val.nama+'</td>'+
-	    				'<td><a href="#" onclick="return hapus_detil_peserta('+id_ujian+', '+val.id+');" '+
-	    				'class="btn btn-danger"><i class="fa fa-times"></i> </a></tr>';
+	    				'<td class="text-center">'+nilai+'</td>'+
+	    				'<td>';
+
+	    		if (val.status == 'N') {
+	    			htm += '<div class="badge badge-success">Belum Mengerjakan</div>';
+	    		} else if (val.status == "D") {
+	    			htm += '<div class="badge badge-warning">Sedang Mengerjakan</div>';
+	    		} else if (val.status == "Y") {
+	    			htm += '<div class="badge badge-danger">Sudah selesai</div>';
+	    		}
+
+	    		htm +=	'<td>';
+	    		if (val.status == 'N') {
+		    		htm += '<a href="#" onclick="return hapus_detil_peserta('+id_ujian+', '+val.id+');" '+
+	    				'class="btn btn-danger"><i class="fa fa-times"></i> </a>';
+	    		} else if (val.status == 'D') {
+	    			htm += '';
+	    		} else if (val.status == 'Y') {
+		    		htm += '<a href="'+base_url+'/admin/ujian/setting/'+id_ujian+'/hasil_peserta/'+val.id+'" class="btn btn-success btn-sm" target="_blank"><i class="fa fa-search"></i> Lihat Hasil</a>';
+	    		}
+
+	    		htm += '</td></tr>';
+
 	    		no++;
 	    	});
 
@@ -281,6 +306,7 @@ function hapus_detil_peserta(id_ujian, id_peserta) {
 		    	load_peserta(id_ujian);
 		    },
 		    error: function(xhr) {
+		    	alert(xhr.responseJSON.message);
 				console.log(xhr)
 		    }
 		});

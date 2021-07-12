@@ -226,7 +226,7 @@ class Ujian_setting extends BaseController {
 		$get_soal = $this->db->table('tr_ikut_ujian a')
 					->where('a.id_tes', $id)
 					->join('m_siswa b', 'a.id_user = b.id')
-					->select('b.*')
+					->select('a.*, b.*')
 					->get()->getResultArray();
 
 		return $this->response->setJSON([
@@ -281,19 +281,78 @@ class Ujian_setting extends BaseController {
 	}
 
 	public function hapus_peserta($id_ujian, $id_peserta) {
-
-		$hapus = $this->db->table('tr_ikut_ujian')
+		// cek sudah ujian 
+		$cek_peserta = $this->db->table('tr_ikut_ujian')
 		->where('id_tes', $id_ujian)
 		->where('id_user', $id_peserta)
-		->delete();
+		->get()->getRow()->status;
 
-		if ($hapus) {
-			return $this->response->setJSON([
-				'message'=>"Peserta berhasil dihapuskan",
+		if ($cek_peserta == 'N') { 
+			$hapus = $this->db->table('tr_ikut_ujian')
+			->where('id_tes', $id_ujian)
+			->where('id_user', $id_peserta)
+			->delete();
+
+			if ($hapus) {
+				return $this->response->setJSON([
+					'message'=>"Peserta berhasil dihapuskan",
+					'id_ujian'=>$id_ujian,
+				]);
+			}
+		} else {
+			return $this->response->setStatusCode(500)->setJSON([
+				'message'=>"Tidak bisa dihapus. Peserta sudah mengikuti ujian",
 				'id_ujian'=>$id_ujian,
 			]);
 		}
 	}
 
+	public function hasil_peserta($id_ujian, $id_peserta) {
+
+		$d['p'] = 'admin/ujian_setting_hasil_peserta';
+		$d['js'] = 'ujian_setting';
+		$d['title'] = 'Hasil Ujian';
+
+		$d['detil_ujian'] = $this->db->table('tr_ikut_ujian a')
+		->where('a.id_tes', $id_ujian)
+		->where('a.id_user', $id_peserta)
+		->join('m_siswa b', 'a.id_user = b.id')
+		->select('a.*, b.*')
+		->get()->getRowArray();
+
+		$d['detil_pengerjaan'] = json_decode($d['detil_ujian']['list_jawaban'], true);
+
+		return view('template_admin', $d);
+	}
 	
+
+	public function cetak_hasil($id) {
+		$d['detil_ujian'] = $this->db->table('tr_guru_tes a')
+					->where('a.id', $id)
+					->join('m_guru b', 'a.id_guru = b.id')
+					->join('m_mapel c', 'a.id_mapel = c.id')
+					->select('a.*, b.nama nm_guru, c.nama nm_mapel')
+					->get()->getRowArray();
+
+		$d['detil_pesertas'] = $this->db->table('tr_ikut_ujian a')
+					->where('a.id_tes', $id)
+					->join('m_siswa b', 'a.id_user = b.id')
+					->select('a.*, b.*')
+					->orderBy('a.nilai', 'desc')
+					->get()->getResultArray();
+
+		$to = $this->request->getGet('to');
+
+		if ($to == "excel") {
+			$file = "cetak_hasi_ujian_".$d['detil_ujian']['nama_ujian']."_".date('YmdHis').".xls";
+
+			header("Content-type: application/vnd.ms-excel");
+			header("Content-Disposition: attachment; filename=$file");
+			return view('page/admin/ujian_setting_cetak_hasil', $d);
+		} else {
+			return view('page/admin/ujian_setting_cetak_hasil', $d);
+		}
+
+
+	}
 }

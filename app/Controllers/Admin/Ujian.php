@@ -40,7 +40,7 @@ class Ujian extends BaseController {
             $search = $p['search'];
 
             $builder = $this->db->table('tr_guru_tes');
-            $builder->where('id_guru', session('id'));
+            $builder->where('id_guru', session('kon_id'));
             $builder->groupStart();
             $builder->like('nama_ujian', $search['value']);
             $builder->groupEnd();
@@ -49,7 +49,7 @@ class Ujian extends BaseController {
 
             // untuk datanya
             $builder = $this->db->table('tr_guru_tes a');
-            $builder->where('id_guru', session('id'));
+            $builder->where('id_guru', session('kon_id'));
             $builder->groupStart();
             $builder->like('nama_ujian', $search['value']);
             $builder->groupEnd();

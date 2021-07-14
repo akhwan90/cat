@@ -10,11 +10,32 @@
 						<div class="card-body">
 
 							<a href="<?=base_url('/admin/ujian');?>" class="btn btn-secondary mr-3"><i class="fa fa-arrow-left"></i> Kembali</a>
+
+							<?php 
+							$link_tambah_peserta = '';
+							$link_tambah_soal = '';
+
+			            	if (strtotime('now') < strtotime($detil_ujian['tgl_mulai'])) {
+								$link_tambah_peserta = '<a href="#" onclick="return tambah_peserta();" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Peserta</a>';
+								$link_tambah_soal = '<a href="#" onclick="return tambah_dari_bank_soal();" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Soal Dari Bank Soal</a>';
+							} else if (strtotime('now') > strtotime($detil_ujian['terlambat'])) {
+								$link_tambah_peserta = '';
+								$link_tambah_soal = '';
+							} else {
+								$link_tambah_peserta = '';
+								$link_tambah_soal = '';
+							}
+							?>
+
 							<a href="#soal" onclick="return load_soal(<?=$detil_ujian['id'];?>);" class="btn btn-success"><i class="fa fa-file"></i> Soal</a>
-							<a href="#" onclick="return tambah_dari_bank_soal();" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Soal Dari Bank Soal</a>
+
+							<?=$link_tambah_soal;?>
+							
 							<!-- <a href="#" class="btn btn-success">Tambah Soal Dari Input Soal</a> -->
 							<a href="#peserta" onclick="return load_peserta(<?=$detil_ujian['id'];?>);" class="btn btn-primary"><i class="fa fa-users"></i> Peserta</a>
-							<a href="#" onclick="return tambah_peserta();" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Peserta</a>
+
+							<?=$link_tambah_peserta;?>
+							
 							<a href="<?=base_url('/admin/ujian/setting/'.$detil_ujian['id'].'/cetak_hasil');?>" class="btn btn-danger" target="_blank"><i class="fa fa-print"></i> Cetak Hasil</a>
 							<a href="<?=base_url('/admin/ujian/setting/'.$detil_ujian['id'].'/cetak_hasil?to=excel');?>" class="btn btn-danger" target="_blank"><i class="fa fa-download"></i> Download Hasil (Excel)</a>
 
